@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#4f46e5">
 
-  <!-- Real Web Manifest File -->
+  <!-- Manifest & Favicon -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/192/906/906334.png">
 
@@ -102,7 +102,7 @@
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
           <h2 class="text-sm font-semibold text-white">Daily Tasks & Target Goals</h2>
-          <p id="task-stats" class="text-xs text-slate-400 mt-0.5">0 of 0 completed</p>
+          <p id="task-stats" class="text-xs text-slate-400 mt-0.5">0 of 0 completed • Tap text to edit</p>
         </div>
         <button onclick="openAddTaskModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-lg shadow-indigo-600/20">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Task
@@ -116,7 +116,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
           <h2 class="text-sm font-semibold text-white">Flexible Routine Schedule</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Edit, reorder, attach videos or images, or update directly via PDF</p>
+          <p class="text-xs text-slate-400 mt-0.5">Tap any routine block to edit time, name, or attachments</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openPdfModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
@@ -135,7 +135,7 @@
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
           <h2 class="text-sm font-semibold text-white">Call Tracker & Outbound</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for your mobile</p>
+          <p class="text-xs text-slate-400 mt-0.5">Tap contact details to edit number or note</p>
         </div>
         <button onclick="openAddCallModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
           <i data-lucide="phone-outgoing" class="w-3.5 h-3.5"></i> Add Call
@@ -185,7 +185,7 @@
 
       <div class="bg-slate-900/60 rounded-xl border border-slate-800 overflow-hidden">
         <div class="p-3 border-b border-slate-800 font-semibold text-xs text-slate-400 flex justify-between">
-          <span>RECENT EXPENSES</span>
+          <span>RECENT EXPENSES (TAP TO EDIT)</span>
           <span id="expense-count">0 transactions</span>
         </div>
         <div id="expense-list" class="divide-y divide-slate-800/60 max-h-96 overflow-y-auto"></div>
@@ -215,6 +215,178 @@
   </nav>
 
   <!-- MODALS -->
+
+  <!-- ROUTINE MODAL (Add / Edit) -->
+  <div id="modal-add-routine" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="routine-modal-title" class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="clock" class="w-4 h-4 text-indigo-400"></i> Add Routine Block
+        </h3>
+        <button onclick="closeAddRoutineModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form onsubmit="handleSaveRoutineItem(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="ritem-id">
+        <div>
+          <label class="block text-slate-400 mb-1">Time Slot / Duration</label>
+          <input type="text" id="ritem-time" placeholder="e.g., 07:00 AM - 08:00 AM" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Activity / Habit Name</label>
+          <input type="text" id="ritem-title" placeholder="e.g., Morning Workout & Hydration" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Routine Category</label>
+          <select id="ritem-period" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+            <option value="Morning">🌅 Morning Phase</option>
+            <option value="Deep Work">⚡ Deep Work & Focus</option>
+            <option value="Afternoon">☀️ Afternoon / Ops</option>
+            <option value="Evening & Winddown">🌙 Evening & Wind-down</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
+            <i data-lucide="youtube" class="w-3.5 h-3.5 text-red-400"></i> YouTube Link (Optional)
+          </label>
+          <input type="url" id="ritem-yt" placeholder="https://youtube.com/watch?v=..."
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
+            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Routine Image (URL or Upload)
+          </label>
+          <input type="text" id="ritem-image-url" placeholder="Paste image link here (e.g., https://...)" onchange="handleRoutineImageUrlChange(event)"
+            class="w-full mb-2 bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-indigo-500">
+          <div class="flex items-center gap-2">
+            <input type="file" id="ritem-image-file" accept="image/*" onchange="handleRoutineImageSelect(event)" class="hidden">
+            <button type="button" onclick="document.getElementById('ritem-image-file').click()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 font-medium">
+              Choose Local Image
+            </button>
+            <button type="button" onclick="clearRoutineImage()" class="px-2 py-2 text-rose-400 hover:bg-slate-800 rounded-lg text-[11px]">Remove</button>
+          </div>
+          <div id="ritem-img-preview" class="hidden mt-2 relative w-full h-28 rounded-lg overflow-hidden border border-slate-700">
+            <img src="" id="ritem-img-preview-tag" class="w-full h-full object-cover" alt="Preview">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddRoutineModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TASK MODAL (Add / Edit) -->
+  <div id="modal-add-task" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="task-modal-title" class="font-bold text-sm text-white">Add Task / Goal</h3>
+        <button onclick="closeAddTaskModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleSaveTask(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="task-id">
+        <div>
+          <label class="block text-slate-400 mb-1">Task Title</label>
+          <input type="text" id="task-title" placeholder="e.g., Review project proposal" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">Priority</label>
+            <select id="task-priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
+              <option value="High">🔴 High</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Due Date</label>
+            <input type="date" id="task-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
+          </div>
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CALL MODAL (Add / Edit) -->
+  <div id="modal-add-call" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="call-modal-title" class="font-bold text-sm text-white">Log Call Contact</h3>
+        <button onclick="closeAddCallModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleSaveCall(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="call-id">
+        <div>
+          <label class="block text-slate-400 mb-1">Name</label>
+          <input type="text" id="call-name" placeholder="e.g., Client / Contact" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Phone Number</label>
+          <input type="tel" id="call-phone" placeholder="+91 98765 43210" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Purpose / Notes</label>
+          <input type="text" id="call-purpose" placeholder="e.g., Project alignment"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddCallModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EXPENSE EDIT MODAL -->
+  <div id="modal-edit-expense" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Edit Expense</h3>
+        <button onclick="closeEditExpenseModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleSaveEditedExpense(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="edit-exp-id">
+        <div>
+          <label class="block text-slate-400 mb-1">Amount (₹)</label>
+          <input type="number" id="edit-exp-amount" required step="any"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Category</label>
+          <select id="edit-exp-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+            <option value="Food & Dining">🍔 Food & Dining</option>
+            <option value="Commute & Fuel">🚗 Commute & Fuel</option>
+            <option value="Bills & Utilities">⚡ Bills & Utilities</option>
+            <option value="Shopping & Personal">🛍️ Shopping & Personal</option>
+            <option value="Work & Gear">💼 Work & Gear</option>
+            <option value="Other">🏷️ Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Note / Description</label>
+          <input type="text" id="edit-exp-note"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeEditExpenseModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Update (₹)</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- PDF UPLOAD MODAL -->
   <div id="modal-pdf" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -258,135 +430,6 @@
           </button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- ROUTINE MODAL (With Image & YouTube Attachment) -->
-  <div id="modal-add-routine" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-sm text-white flex items-center gap-2">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400"></i> Add Routine Block
-        </h3>
-        <button onclick="closeAddRoutineModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-
-      <form onsubmit="handleSaveRoutineItem(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1">Time Slot / Duration</label>
-          <input type="text" id="ritem-time" placeholder="e.g., 07:00 AM - 08:00 AM" required
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Activity / Habit Name</label>
-          <input type="text" id="ritem-title" placeholder="e.g., Morning Workout & Hydration" required
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Routine Category</label>
-          <select id="ritem-period" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-            <option value="Morning">🌅 Morning Phase</option>
-            <option value="Deep Work">⚡ Deep Work & Focus</option>
-            <option value="Afternoon">☀️ Afternoon / Ops</option>
-            <option value="Evening & Winddown">🌙 Evening & Wind-down</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
-            <i data-lucide="youtube" class="w-3.5 h-3.5 text-red-400"></i> YouTube Link (Optional)
-          </label>
-          <input type="url" id="ritem-yt" placeholder="https://youtube.com/watch?v=..."
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-
-        <div>
-          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
-            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Routine Image (Optional)
-          </label>
-          <div class="flex items-center gap-2">
-            <input type="file" id="ritem-image-file" accept="image/*" onchange="handleRoutineImageSelect(event)" class="hidden">
-            <button type="button" onclick="document.getElementById('ritem-image-file').click()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 font-medium">
-              Choose File
-            </button>
-            <span id="ritem-image-name" class="text-[11px] text-slate-400 truncate flex-1">No file chosen</span>
-          </div>
-          <div id="ritem-img-preview" class="hidden mt-2 relative w-full h-28 rounded-lg overflow-hidden border border-slate-700">
-            <img src="" id="ritem-img-preview-tag" class="w-full h-full object-cover" alt="Preview">
-          </div>
-        </div>
-
-        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
-          <button type="button" onclick="closeAddRoutineModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Block</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TASK MODAL -->
-  <div id="modal-add-task" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-sm text-white">Add Task / Goal</h3>
-        <button onclick="closeAddTaskModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <form onsubmit="handleSaveTask(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1">Task Title</label>
-          <input type="text" id="task-title" placeholder="e.g., Review project proposal" required
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-slate-400 mb-1">Priority</label>
-            <select id="task-priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
-              <option value="High">🔴 High</option>
-              <option value="Medium" selected>🟡 Medium</option>
-              <option value="Low">🟢 Low</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-slate-400 mb-1">Due Date</label>
-            <input type="date" id="task-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
-          </div>
-        </div>
-        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
-          <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Task</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- CALL MODAL -->
-  <div id="modal-add-call" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-sm text-white">Log Call Contact</h3>
-        <button onclick="closeAddCallModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <form onsubmit="handleSaveCall(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1">Name</label>
-          <input type="text" id="call-name" placeholder="e.g., Client / Contact" required
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Phone Number</label>
-          <input type="tel" id="call-phone" placeholder="+91 98765 43210" required
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Purpose / Notes</label>
-          <input type="text" id="call-purpose" placeholder="e.g., Project alignment"
-            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
-        </div>
-        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
-          <button type="button" onclick="closeAddCallModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Contact</button>
-        </div>
-      </form>
     </div>
   </div>
 
@@ -437,17 +480,18 @@
     </div>
   </div>
 
-  <!-- CORE SCRIPT -->
+  <!-- CORE JAVASCRIPT -->
   <script>
     const DB_KEY = 'LIFEOS_STORE_V2';
     let appData = {
       budget: 25000,
       tasks: [],
       routine: [
-        { id: '1', period: 'Morning', time: '06:30 AM - 07:30 AM', title: 'Hydration & Morning Fitness', completed: false, image: '', yt: 'https://www.youtube.com/watch?v=UBMk30rjy0o' },
-        { id: '2', period: 'Deep Work', time: '09:00 AM - 12:30 PM', title: 'Deep Work Sprint 1', completed: false, image: '', yt: '' },
-        { id: '3', period: 'Afternoon', time: '02:00 PM - 04:30 PM', title: 'Execution, Calls & Admin', completed: false, image: '', yt: '' },
-        { id: '4', period: 'Evening & Winddown', time: '09:00 PM - 10:00 PM', title: 'Daily Review & Next Day Prep', completed: false, image: '', yt: '' }
+        { id: '1', period: 'Morning', time: '06:00 AM', title: 'Wake up + Drink 300-400 ml water', completed: false, image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80', yt: '' },
+        { id: '2', period: 'Morning', time: '06:05 AM', title: 'Diaphragmatic breathing (5 mins)', completed: false, image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80', yt: 'https://www.youtube.com/watch?v=UBMk30rjy0o' },
+        { id: '3', period: 'Deep Work', time: '09:00 AM - 12:30 PM', title: 'Deep Work Sprint 1', completed: false, image: '', yt: '' },
+        { id: '4', period: 'Afternoon', time: '01:00 PM', title: 'Lunch & Movement Break', completed: false, image: '', yt: '' },
+        { id: '5', period: 'Evening & Winddown', time: '06:15 PM', title: 'Evening Workout (Glutes/Chest/Core)', completed: false, image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80', yt: '' }
       ],
       calls: [],
       expenses: []
@@ -463,11 +507,8 @@
       });
       renderAll();
 
-      // Register standard service worker file
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker Active:', reg.scope))
-          .catch(err => console.error('SW Registration Failed:', err));
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
     });
 
@@ -500,11 +541,9 @@
       ['tasks', 'routine', 'calls', 'expenses'].forEach(t => {
         const mActive = document.getElementById(`mtab-${t}`);
         if (mActive) {
-          if (t === tab) {
-            mActive.className = 'flex flex-col items-center gap-1 text-indigo-400 font-semibold text-[10px]';
-          } else {
-            mActive.className = 'flex flex-col items-center gap-1 text-slate-400 text-[10px]';
-          }
+          mActive.className = (t === tab)
+            ? 'flex flex-col items-center gap-1 text-indigo-400 font-semibold text-[10px]'
+            : 'flex flex-col items-center gap-1 text-slate-400 text-[10px]';
         }
       });
     }
@@ -517,11 +556,12 @@
       lucide.createIcons();
     }
 
+    /* ------------------- TASKS (WITH TAP-TO-EDIT) ------------------- */
     function renderTasks() {
       const list = document.getElementById('tasks-list');
       const stats = document.getElementById('task-stats');
       const completed = appData.tasks.filter(t => t.completed).length;
-      stats.textContent = `${completed} of ${appData.tasks.length} completed`;
+      stats.textContent = `${completed} of ${appData.tasks.length} completed • Tap to edit`;
 
       if (!appData.tasks.length) {
         list.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No tasks logged. Tap 'Add Task' above.</div>`;
@@ -529,19 +569,22 @@
       }
 
       list.innerHTML = appData.tasks.map(t => `
-        <div class="flex items-center justify-between p-3 rounded-xl border ${t.completed ? 'bg-slate-900/30 border-slate-800/40 opacity-60' : 'bg-slate-900/80 border-slate-800'} transition">
-          <div class="flex items-center gap-3">
-            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}')"
+        <div class="flex items-center justify-between p-3 rounded-xl border ${t.completed ? 'bg-slate-900/30 border-slate-800/40 opacity-60' : 'bg-slate-900/80 border-slate-800'} transition group hover:border-slate-700">
+          <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="openEditTaskModal('${t.id}')">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask('${t.id}')"
               class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
-            <div>
-              <p class="text-xs font-semibold ${t.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${t.title}</p>
+            <div class="flex-1">
+              <p class="text-xs font-semibold ${t.completed ? 'line-through text-slate-400' : 'text-slate-100'} hover:text-indigo-300 transition">${t.title}</p>
               <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
                 <span class="px-1.5 py-0.2 rounded ${t.priority === 'High' ? 'bg-rose-500/10 text-rose-400' : t.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}">${t.priority}</span>
                 ${t.date ? `<span>• Due ${t.date}</span>` : ''}
               </div>
             </div>
           </div>
-          <button onclick="deleteTask('${t.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <div class="flex items-center gap-1">
+            <button onclick="openEditTaskModal('${t.id}')" class="text-slate-500 hover:text-indigo-400 p-1.5 transition"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="deleteTask('${t.id}')" class="text-slate-500 hover:text-rose-400 p-1.5 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
         </div>
       `).join('');
     }
@@ -554,19 +597,50 @@
       appData.tasks = appData.tasks.filter(t => t.id !== id);
       saveState();
     }
+    function openAddTaskModal() {
+      document.getElementById('task-id').value = '';
+      document.getElementById('task-title').value = '';
+      document.getElementById('task-priority').value = 'Medium';
+      document.getElementById('task-date').value = '';
+      document.getElementById('task-modal-title').textContent = 'Add Task / Goal';
+      document.getElementById('modal-add-task').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function openEditTaskModal(id) {
+      const task = appData.tasks.find(t => t.id === id);
+      if (!task) return;
+      document.getElementById('task-id').value = task.id;
+      document.getElementById('task-title').value = task.title;
+      document.getElementById('task-priority').value = task.priority || 'Medium';
+      document.getElementById('task-date').value = task.date || '';
+      document.getElementById('task-modal-title').textContent = 'Edit Task / Goal';
+      document.getElementById('modal-add-task').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeAddTaskModal() { document.getElementById('modal-add-task').classList.add('hidden'); }
     function handleSaveTask(e) {
       e.preventDefault();
-      appData.tasks.push({
-        id: Date.now().toString(),
-        title: document.getElementById('task-title').value,
-        priority: document.getElementById('task-priority').value,
-        date: document.getElementById('task-date').value,
-        completed: false
-      });
+      const id = document.getElementById('task-id').value;
+      const title = document.getElementById('task-title').value;
+      const priority = document.getElementById('task-priority').value;
+      const date = document.getElementById('task-date').value;
+
+      if (id) {
+        appData.tasks = appData.tasks.map(t => t.id === id ? { ...t, title, priority, date } : t);
+      } else {
+        appData.tasks.push({
+          id: Date.now().toString(),
+          title,
+          priority,
+          date,
+          completed: false
+        });
+      }
       closeAddTaskModal();
       saveState();
     }
 
+    /* ------------------- ROUTINE (WITH TAP-TO-EDIT) ------------------- */
     function renderRoutine() {
       const container = document.getElementById('routine-blocks-container');
       const periods = ['Morning', 'Deep Work', 'Afternoon', 'Evening & Winddown'];
@@ -582,24 +656,25 @@
             <div class="space-y-2">
               ${items.length === 0 ? `<div class="p-3 text-xs text-slate-600 bg-slate-900/30 rounded-xl border border-dashed border-slate-800">No scheduled items.</div>` : ''}
               ${items.map(r => `
-                <div class="p-3 bg-slate-900/80 rounded-xl border ${r.completed ? 'border-indigo-500/30 bg-indigo-950/10' : 'border-slate-800'} space-y-2">
+                <div class="p-3 bg-slate-900/80 rounded-xl border ${r.completed ? 'border-indigo-500/30 bg-indigo-950/10' : 'border-slate-800'} space-y-2 hover:border-slate-700 transition">
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <input type="checkbox" ${r.completed ? 'checked' : ''} onchange="toggleRoutine('${r.id}')"
+                    <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="openEditRoutineModal('${r.id}')">
+                      <input type="checkbox" ${r.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleRoutine('${r.id}')"
                         class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
-                      <div>
+                      <div class="flex-1">
                         <span class="text-[10px] font-mono text-indigo-400 font-semibold">${r.time}</span>
-                        <h4 class="text-xs font-semibold ${r.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${r.title}</h4>
+                        <h4 class="text-xs font-semibold ${r.completed ? 'line-through text-slate-400' : 'text-slate-100'} hover:text-indigo-300 transition">${r.title}</h4>
                       </div>
                     </div>
                     <div class="flex items-center gap-1">
-                      ${r.yt ? `<button onclick="openYtModal('${r.yt}')" class="p-1 text-rose-400 hover:text-rose-300 bg-rose-500/10 rounded-lg"><i data-lucide="youtube" class="w-4 h-4"></i></button>` : ''}
-                      <button onclick="deleteRoutine('${r.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                      ${r.yt ? `<button onclick="openYtModal('${r.yt}')" class="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 rounded-lg transition"><i data-lucide="youtube" class="w-4 h-4"></i></button>` : ''}
+                      <button onclick="openEditRoutineModal('${r.id}')" class="text-slate-500 hover:text-indigo-400 p-1.5 transition"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                      <button onclick="deleteRoutine('${r.id}')" class="text-slate-500 hover:text-rose-400 p-1.5 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>
                   </div>
                   ${r.image ? `
-                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-800 max-h-48 w-full bg-slate-950">
-                      <img src="${r.image}" class="w-full h-auto object-cover max-h-48 cursor-pointer" onclick="window.open('${r.image}', '_blank')" alt="Attachment">
+                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-800 max-h-48 w-full bg-slate-950 cursor-pointer" onclick="openEditRoutineModal('${r.id}')">
+                      <img src="${r.image}" class="w-full h-auto object-cover max-h-48" alt="Attachment">
                     </div>
                   ` : ''}
                 </div>
@@ -618,50 +693,95 @@
       appData.routine = appData.routine.filter(r => r.id !== id);
       saveState();
     }
+    function openAddRoutineModal() {
+      document.getElementById('ritem-id').value = '';
+      document.getElementById('ritem-time').value = '';
+      document.getElementById('ritem-title').value = '';
+      document.getElementById('ritem-period').value = 'Morning';
+      document.getElementById('ritem-yt').value = '';
+      document.getElementById('ritem-image-url').value = '';
+      tempRoutineImage = '';
+      document.getElementById('ritem-img-preview').classList.add('hidden');
+      document.getElementById('routine-modal-title').innerHTML = '<i data-lucide="clock" class="w-4 h-4 text-indigo-400"></i> Add Routine Block';
+      document.getElementById('modal-add-routine').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function openEditRoutineModal(id) {
+      const item = appData.routine.find(r => r.id === id);
+      if (!item) return;
+      document.getElementById('ritem-id').value = item.id;
+      document.getElementById('ritem-time').value = item.time;
+      document.getElementById('ritem-title').value = item.title;
+      document.getElementById('ritem-period').value = item.period;
+      document.getElementById('ritem-yt').value = item.yt || '';
+      document.getElementById('ritem-image-url').value = item.image || '';
+      tempRoutineImage = item.image || '';
+
+      if (tempRoutineImage) {
+        document.getElementById('ritem-img-preview-tag').src = tempRoutineImage;
+        document.getElementById('ritem-img-preview').classList.remove('hidden');
+      } else {
+        document.getElementById('ritem-img-preview').classList.add('hidden');
+      }
+
+      document.getElementById('routine-modal-title').innerHTML = '<i data-lucide="edit-2" class="w-4 h-4 text-indigo-400"></i> Edit Routine Block';
+      document.getElementById('modal-add-routine').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeAddRoutineModal() { document.getElementById('modal-add-routine').classList.add('hidden'); }
+    function handleRoutineImageUrlChange(e) {
+      tempRoutineImage = e.target.value.trim();
+      if (tempRoutineImage) {
+        document.getElementById('ritem-img-preview-tag').src = tempRoutineImage;
+        document.getElementById('ritem-img-preview').classList.remove('hidden');
+      } else {
+        document.getElementById('ritem-img-preview').classList.add('hidden');
+      }
+    }
     function handleRoutineImageSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
-      document.getElementById('ritem-image-name').textContent = file.name;
       const reader = new FileReader();
       reader.onload = ev => {
         tempRoutineImage = ev.target.result;
+        document.getElementById('ritem-image-url').value = '';
         document.getElementById('ritem-img-preview-tag').src = tempRoutineImage;
         document.getElementById('ritem-img-preview').classList.remove('hidden');
       };
       reader.readAsDataURL(file);
     }
+    function clearRoutineImage() {
+      tempRoutineImage = '';
+      document.getElementById('ritem-image-url').value = '';
+      document.getElementById('ritem-img-preview').classList.add('hidden');
+    }
     function handleSaveRoutineItem(e) {
       e.preventDefault();
-      appData.routine.push({
-        id: Date.now().toString(),
-        time: document.getElementById('ritem-time').value,
-        title: document.getElementById('ritem-title').value,
-        period: document.getElementById('ritem-period').value,
-        yt: document.getElementById('ritem-yt').value.trim(),
-        image: tempRoutineImage,
-        completed: false
-      });
+      const id = document.getElementById('ritem-id').value;
+      const time = document.getElementById('ritem-time').value;
+      const title = document.getElementById('ritem-title').value;
+      const period = document.getElementById('ritem-period').value;
+      const yt = document.getElementById('ritem-yt').value.trim();
+      const image = tempRoutineImage || document.getElementById('ritem-image-url').value.trim();
+
+      if (id) {
+        appData.routine = appData.routine.map(r => r.id === id ? { ...r, time, title, period, yt, image } : r);
+      } else {
+        appData.routine.push({
+          id: Date.now().toString(),
+          time,
+          title,
+          period,
+          yt,
+          image,
+          completed: false
+        });
+      }
       closeAddRoutineModal();
       saveState();
     }
 
-    function openYtModal(url) {
-      let videoId = '';
-      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
-      else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
-      if (videoId) {
-        document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        document.getElementById('modal-yt-player').classList.remove('hidden');
-        lucide.createIcons();
-      } else {
-        window.open(url, '_blank');
-      }
-    }
-    function closeYtModal() {
-      document.getElementById('yt-iframe').src = '';
-      document.getElementById('modal-yt-player').classList.add('hidden');
-    }
-
+    /* ------------------- CALLS (WITH TAP-TO-EDIT) ------------------- */
     function renderCalls() {
       const list = document.getElementById('calls-list');
       if (!appData.calls.length) {
@@ -669,29 +789,55 @@
         return;
       }
       list.innerHTML = appData.calls.map(c => `
-        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/80">
-          <div>
-            <h4 class="text-xs font-semibold text-white">${c.name}</h4>
+        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition">
+          <div class="flex-1 cursor-pointer" onclick="openEditCallModal('${c.id}')">
+            <h4 class="text-xs font-semibold text-white hover:text-indigo-300 transition">${c.name}</h4>
             <p class="text-[11px] text-slate-400 font-mono mt-0.5">${c.phone}</p>
             ${c.purpose ? `<span class="text-[10px] text-indigo-400">${c.purpose}</span>` : ''}
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5">
             <a href="tel:${c.phone}" class="p-2 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
               <i data-lucide="phone" class="w-4 h-4"></i>
             </a>
-            <button onclick="deleteCall('${c.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="openEditCallModal('${c.id}')" class="text-slate-500 hover:text-indigo-400 p-1.5 transition"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="deleteCall('${c.id}')" class="text-slate-500 hover:text-rose-400 p-1.5 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         </div>
       `).join('');
     }
+    function openAddCallModal() {
+      document.getElementById('call-id').value = '';
+      document.getElementById('call-name').value = '';
+      document.getElementById('call-phone').value = '';
+      document.getElementById('call-purpose').value = '';
+      document.getElementById('call-modal-title').textContent = 'Log Call Contact';
+      document.getElementById('modal-add-call').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function openEditCallModal(id) {
+      const call = appData.calls.find(c => c.id === id);
+      if (!call) return;
+      document.getElementById('call-id').value = call.id;
+      document.getElementById('call-name').value = call.name;
+      document.getElementById('call-phone').value = call.phone;
+      document.getElementById('call-purpose').value = call.purpose || '';
+      document.getElementById('call-modal-title').textContent = 'Edit Call Contact';
+      document.getElementById('modal-add-call').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeAddCallModal() { document.getElementById('modal-add-call').classList.add('hidden'); }
     function handleSaveCall(e) {
       e.preventDefault();
-      appData.calls.push({
-        id: Date.now().toString(),
-        name: document.getElementById('call-name').value,
-        phone: document.getElementById('call-phone').value,
-        purpose: document.getElementById('call-purpose').value
-      });
+      const id = document.getElementById('call-id').value;
+      const name = document.getElementById('call-name').value;
+      const phone = document.getElementById('call-phone').value;
+      const purpose = document.getElementById('call-purpose').value;
+
+      if (id) {
+        appData.calls = appData.calls.map(c => c.id === id ? { ...c, name, phone, purpose } : c);
+      } else {
+        appData.calls.push({ id: Date.now().toString(), name, phone, purpose });
+      }
       closeAddCallModal();
       saveState();
     }
@@ -700,6 +846,7 @@
       saveState();
     }
 
+    /* ------------------- EXPENSES (WITH TAP-TO-EDIT) ------------------- */
     function renderExpenses() {
       const total = appData.expenses.reduce((acc, x) => acc + Number(x.amount), 0);
       const budget = appData.budget || 25000;
@@ -721,17 +868,18 @@
         return;
       }
       list.innerHTML = appData.expenses.slice().reverse().map(x => `
-        <div class="flex items-center justify-between p-3 text-xs">
-          <div>
+        <div class="flex items-center justify-between p-3 text-xs hover:bg-slate-800/40 transition">
+          <div class="flex-1 cursor-pointer" onclick="openEditExpenseModal('${x.id}')">
             <div class="flex items-center gap-2">
-              <span class="font-semibold text-slate-200">${x.note || x.category}</span>
+              <span class="font-semibold text-slate-200 hover:text-indigo-300 transition">${x.note || x.category}</span>
               <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${x.category}</span>
             </div>
             <span class="text-[10px] text-slate-500">${x.date}</span>
           </div>
           <div class="flex items-center gap-3">
             <span class="font-bold text-rose-400 font-mono">₹${Number(x.amount).toLocaleString('en-IN')}</span>
-            <button onclick="deleteExpense('${x.id}')" class="text-slate-600 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="openEditExpenseModal('${x.id}')" class="text-slate-500 hover:text-indigo-400 p-1"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+            <button onclick="deleteExpense('${x.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         </div>
       `).join('');
@@ -752,11 +900,34 @@
       document.getElementById('quick-exp-note').value = '';
       saveState();
     }
+    function openEditExpenseModal(id) {
+      const exp = appData.expenses.find(x => x.id === id);
+      if (!exp) return;
+      document.getElementById('edit-exp-id').value = exp.id;
+      document.getElementById('edit-exp-amount').value = exp.amount;
+      document.getElementById('edit-exp-cat').value = exp.category;
+      document.getElementById('edit-exp-note').value = exp.note || '';
+      document.getElementById('modal-edit-expense').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeEditExpenseModal() { document.getElementById('modal-edit-expense').classList.add('hidden'); }
+    function handleSaveEditedExpense(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-exp-id').value;
+      const amount = parseFloat(document.getElementById('edit-exp-amount').value);
+      const category = document.getElementById('edit-exp-cat').value;
+      const note = document.getElementById('edit-exp-note').value;
+
+      appData.expenses = appData.expenses.map(x => x.id === id ? { ...x, amount, category, note } : x);
+      closeEditExpenseModal();
+      saveState();
+    }
     function deleteExpense(id) {
       appData.expenses = appData.expenses.filter(x => x.id !== id);
       saveState();
     }
 
+    /* ------------------- PDF PARSING ENGINE ------------------- */
     async function handlePdfUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -807,28 +978,41 @@
     }
 
     function parseTextIntoRoutine(text) {
-      const lines = text.split(/\r?\n|\s{3,}/).map(l => l.trim()).filter(Boolean);
+      const lines = text.split(/\r?\n|\r/).map(l => l.trim()).filter(Boolean);
       const extracted = [];
-      const timeRegex = /(\b\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\s*(?:-|to)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\b)/;
+      const seen = new Set();
+      const timeRegex = /(\b\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?(?:\s*[-–—to|]\s*\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?)?)/;
 
-      for (let line of lines) {
+      for (let rawLine of lines) {
+        let line = rawLine.replace(/^[•\*\-\|\d\.\s]+/, '').replace(/\|/g, ' - ').trim();
         const match = line.match(timeRegex);
-        if (match) {
-          const time = match[0].trim();
-          let title = line.replace(time, '').replace(/^[:\-\s]+/, '').trim();
-          if (!title) title = 'Scheduled Activity';
+
+        if (match && /\d/.test(match[0])) {
+          const timeStr = match[0].trim();
+          let activity = line.replace(timeStr, '').replace(/^[:\-\–—\|\s]+/, '').trim();
+          if (!activity || /^(activity|meal|time|target)$/i.test(activity)) continue;
+
+          const key = `${timeStr}_${activity.toLowerCase()}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
 
           let period = 'Deep Work';
-          const lower = (time + ' ' + title).toLowerCase();
-          if (lower.includes('morning') || lower.includes('am') || lower.includes('breakfast') || lower.includes('wake')) period = 'Morning';
-          else if (lower.includes('afternoon') || lower.includes('lunch')) period = 'Afternoon';
-          else if (lower.includes('night') || lower.includes('dinner') || lower.includes('sleep') || lower.includes('wind')) period = 'Evening & Winddown';
+          const checkStr = (timeStr + ' ' + activity).toLowerCase();
+          if (checkStr.includes('6:') || checkStr.includes('7:') || checkStr.includes('8:') || checkStr.includes('morning')) {
+            period = 'Morning';
+          } else if (checkStr.includes('9:') || checkStr.includes('10:') || checkStr.includes('11:') || checkStr.includes('12:') || checkStr.includes('start work')) {
+            period = 'Deep Work';
+          } else if (checkStr.includes('1:') || checkStr.includes('2:') || checkStr.includes('3:') || checkStr.includes('4:') || checkStr.includes('5:') || checkStr.includes('afternoon') || checkStr.includes('lunch')) {
+            period = 'Afternoon';
+          } else {
+            period = 'Evening & Winddown';
+          }
 
           extracted.push({
             id: Date.now() + Math.random().toString(),
-            time,
-            title,
-            period,
+            time: timeStr,
+            title: activity,
+            period: period,
             yt: '',
             image: '',
             completed: false
@@ -850,20 +1034,25 @@
       switchTab('routine');
     }
 
+    /* ------------------- YOUTUBE & SETTINGS MODALS ------------------- */
+    function openYtModal(url) {
+      let videoId = '';
+      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+      else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
+      if (videoId) {
+        document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        document.getElementById('modal-yt-player').classList.remove('hidden');
+        lucide.createIcons();
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+    function closeYtModal() {
+      document.getElementById('yt-iframe').src = '';
+      document.getElementById('modal-yt-player').classList.add('hidden');
+    }
     function openPdfModal() { document.getElementById('modal-pdf').classList.remove('hidden'); lucide.createIcons(); }
     function closePdfModal() { document.getElementById('modal-pdf').classList.add('hidden'); }
-    function openAddRoutineModal() {
-      tempRoutineImage = '';
-      document.getElementById('ritem-img-preview').classList.add('hidden');
-      document.getElementById('ritem-image-name').textContent = 'No file chosen';
-      document.getElementById('modal-add-routine').classList.remove('hidden');
-      lucide.createIcons();
-    }
-    function closeAddRoutineModal() { document.getElementById('modal-add-routine').classList.add('hidden'); }
-    function openAddTaskModal() { document.getElementById('modal-add-task').classList.remove('hidden'); lucide.createIcons(); }
-    function closeAddTaskModal() { document.getElementById('modal-add-task').classList.add('hidden'); }
-    function openAddCallModal() { document.getElementById('modal-add-call').classList.remove('hidden'); lucide.createIcons(); }
-    function closeAddCallModal() { document.getElementById('modal-add-call').classList.add('hidden'); }
     function openSettingsModal() {
       document.getElementById('settings-budget-input').value = appData.budget || 25000;
       document.getElementById('modal-settings').classList.remove('hidden');
