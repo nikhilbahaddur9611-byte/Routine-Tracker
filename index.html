@@ -890,5 +890,21 @@
       reader.readAsText(file);
     }
   </script>
+  <script>
+  // Register an in-memory Service Worker to satisfy Chrome's PWA install criteria
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `
+        self.addEventListener('install', (e) => self.skipWaiting());
+        self.addEventListener('activate', (e) => clients.claim());
+        self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob))
+        .then(() => console.log('Service Worker Registered'))
+        .catch((err) => console.log('SW registration fallback:', err));
+    });
+  }
+</script>
 </body>
 </html>
