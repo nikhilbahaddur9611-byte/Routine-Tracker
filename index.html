@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>LifeOS • Personal Command Center</title>
 
-  <!-- PWA & Mobile Standalone Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#090d16">
+  <meta name="theme-color" content="#4f46e5">
 
-  <!-- Embedded Web Manifest for Native Android Installation -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"LifeOS","short_name":"LifeOS","start_url":".","display":"standalone","background_color":"#090d16","theme_color":"#090d16"}'>
+  <!-- SVG App Icon for Chrome Installation -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%234f46e5'/%3E%3Cpath d='M280 48L120 288h128l-32 176 176-240H264z' fill='white'/%3E%3C/svg%3E">
+
+  <!-- Manifest with embedded icon data -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"LifeOS","short_name":"LifeOS","start_url":".","display":"standalone","background_color":"#090d16","theme_color":"#4f46e5","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"%3E%3Crect width=\"512\" height=\"512\" rx=\"128\" fill=\"%234f46e5\"/%3E%3Cpath d=\"M280 48L120 288h128l-32 176 176-240H264z\" fill=\"white\"/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
 
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- PDF.js for client-side offline PDF parsing -->
+  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -43,6 +45,21 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
+
+  <script>
+    // Service Worker registration required for Chrome PWA installability
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swBlob = new Blob([
+          `self.addEventListener('install', e => self.skipWaiting());
+           self.addEventListener('activate', e => clients.claim());
+           self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`
+        ], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      });
+    }
+  </script>
+</head>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-24 md:pb-6">
 
