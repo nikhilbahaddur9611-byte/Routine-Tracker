@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>LifeOS • Personal Command Center</title>
-  
+
+  <!-- PWA & Mobile Standalone Settings -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- Embedded Web Manifest for Native Android Installation -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"LifeOS","short_name":"LifeOS","start_url":".","display":"standalone","background_color":"#090d16","theme_color":"#090d16"}'>
+
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -87,7 +96,7 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto w-full px-4 pt-4 flex-1">
     
-    <!-- ===================== SECTION 1: TASKS ===================== -->
+    <!-- TASKS -->
     <section id="view-tasks" class="tab-view block space-y-4">
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
@@ -98,11 +107,10 @@
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Task
         </button>
       </div>
-
       <div id="tasks-list" class="space-y-2"></div>
     </section>
 
-    <!-- ===================== SECTION 2: ROUTINE ===================== -->
+    <!-- ROUTINE -->
     <section id="view-routine" class="tab-view hidden space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
@@ -118,29 +126,25 @@
           </button>
         </div>
       </div>
-
-      <!-- Time Blocks -->
       <div class="space-y-6" id="routine-blocks-container"></div>
     </section>
 
-    <!-- ===================== SECTION 3: CALLS ===================== -->
+    <!-- CALLS -->
     <section id="view-calls" class="tab-view hidden space-y-4">
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
           <h2 class="text-sm font-semibold text-white">Call Tracker & Outbound</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for your mobile</p>
+          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for mobile</p>
         </div>
         <button onclick="openAddCallModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
           <i data-lucide="phone-outgoing" class="w-3.5 h-3.5"></i> Add Call
         </button>
       </div>
-
       <div id="calls-list" class="space-y-2"></div>
     </section>
 
-    <!-- ===================== SECTION 4: EXPENSES (₹) ===================== -->
+    <!-- EXPENSES (₹) -->
     <section id="view-expenses" class="tab-view hidden space-y-4">
-      <!-- Monthly Overview Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
           <span class="text-xs text-slate-400 font-medium">This Month</span>
@@ -160,7 +164,6 @@
         </div>
       </div>
 
-      <!-- Quick Logger -->
       <form onsubmit="handleQuickExpense(event)" class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex flex-wrap gap-2 items-center">
         <input type="number" id="quick-exp-amount" placeholder="Amount (₹)" required step="any"
           class="w-32 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
@@ -172,14 +175,13 @@
           <option value="Work & Gear">💼 Work</option>
           <option value="Other">🏷️ Other</option>
         </select>
-        <input type="text" id="quick-exp-note" placeholder="Note (e.g., Grocery, Petrol)"
+        <input type="text" id="quick-exp-note" placeholder="Note (e.g., Grocery, Fuel)"
           class="flex-1 min-w-[140px] bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
         <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Log (₹)
         </button>
       </form>
 
-      <!-- Expense Ledger Table -->
       <div class="bg-slate-900/60 rounded-xl border border-slate-800 overflow-hidden">
         <div class="p-3 border-b border-slate-800 font-semibold text-xs text-slate-400 flex justify-between">
           <span>RECENT EXPENSES</span>
@@ -191,7 +193,7 @@
 
   </main>
 
-  <!-- ===================== MOBILE BOTTOM DOCK ===================== -->
+  <!-- MOBILE BOTTOM DOCK -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-3 py-2 flex items-center justify-around">
     <button onclick="switchTab('tasks')" id="mtab-tasks" class="flex flex-col items-center gap-1 text-indigo-400 font-semibold text-[10px]">
       <i data-lucide="check-square" class="w-5 h-5"></i>
@@ -211,9 +213,9 @@
     </button>
   </nav>
 
-  <!-- ===================== MODALS ===================== -->
+  <!-- MODALS -->
 
-  <!-- 1. PDF UPLOAD MODAL -->
+  <!-- PDF MODAL -->
   <div id="modal-pdf" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -228,7 +230,7 @@
         <label class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition bg-slate-800/40">
           <i data-lucide="upload-cloud" class="w-8 h-8 text-indigo-400 mb-2"></i>
           <span class="text-xs font-semibold text-slate-200 text-center">Tap to select your Routine PDF</span>
-          <span class="text-[11px] text-slate-400 mt-1">Parses directly in browser (100% offline & private)</span>
+          <span class="text-[11px] text-slate-400 mt-1">Parses directly in browser (offline & private)</span>
           <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" onchange="handlePdfUpload(event)">
         </label>
 
@@ -258,7 +260,7 @@
     </div>
   </div>
 
-  <!-- 2. ADD ROUTINE ITEM MODAL (Supports Image & YouTube) -->
+  <!-- ROUTINE MODAL -->
   <div id="modal-add-routine" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -289,7 +291,6 @@
           </select>
         </div>
 
-        <!-- YouTube Link Field -->
         <div>
           <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
             <i data-lucide="youtube" class="w-3.5 h-3.5 text-red-400"></i> YouTube Link (Optional)
@@ -298,10 +299,9 @@
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
 
-        <!-- Image Upload / Attachment -->
         <div>
           <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
-            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Routine Image / Chart (Optional)
+            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Routine Image (Optional)
           </label>
           <div class="flex items-center gap-2">
             <input type="file" id="ritem-image-file" accept="image/*" onchange="handleRoutineImageSelect(event)" class="hidden">
@@ -323,7 +323,7 @@
     </div>
   </div>
 
-  <!-- 3. ADD TASK MODAL -->
+  <!-- TASK MODAL -->
   <div id="modal-add-task" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -333,7 +333,7 @@
       <form onsubmit="handleSaveTask(event)" class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-400 mb-1">Task Title</label>
-          <input type="text" id="task-title" placeholder="e.g., File GST invoice or update repo" required
+          <input type="text" id="task-title" placeholder="e.g., Follow up on report" required
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -358,7 +358,7 @@
     </div>
   </div>
 
-  <!-- 4. ADD CALL MODAL -->
+  <!-- CALL MODAL -->
   <div id="modal-add-call" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -368,7 +368,7 @@
       <form onsubmit="handleSaveCall(event)" class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-400 mb-1">Name</label>
-          <input type="text" id="call-name" placeholder="e.g., Rahul Sharma" required
+          <input type="text" id="call-name" placeholder="e.g., Client / Friend" required
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
@@ -377,8 +377,8 @@
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
-          <label class="block text-slate-400 mb-1">Purpose / Agenda</label>
-          <input type="text" id="call-purpose" placeholder="e.g., Review project specs"
+          <label class="block text-slate-400 mb-1">Purpose / Notes</label>
+          <input type="text" id="call-purpose" placeholder="e.g., Project alignment"
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
@@ -389,7 +389,7 @@
     </div>
   </div>
 
-  <!-- 5. YOUTUBE PLAYER MODAL -->
+  <!-- YT MODAL -->
   <div id="modal-yt-player" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -404,7 +404,7 @@
     </div>
   </div>
 
-  <!-- 6. SETTINGS & BACKUP MODAL -->
+  <!-- SETTINGS MODAL -->
   <div id="modal-settings" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -423,7 +423,7 @@
 
         <div class="border-t border-slate-800 pt-3 space-y-2">
           <span class="block text-slate-300 font-semibold">Manual Data Export / Backup</span>
-          <p class="text-[11px] text-slate-400">Download your entire database as a JSON file to transfer between devices anytime.</p>
+          <p class="text-[11px] text-slate-400">Download your data as JSON to transfer between devices anytime.</p>
           <div class="flex gap-2">
             <button onclick="exportDataJson()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 font-medium">Export JSON</button>
             <label class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 font-medium text-center cursor-pointer">
@@ -436,16 +436,15 @@
     </div>
   </div>
 
-  <!-- APPLICATION LOGIC -->
+  <!-- CORE SCRIPT -->
   <script>
-    // CORE STATE
     const DB_KEY = 'LIFEOS_STORE_V2';
     let appData = {
       budget: 25000,
       tasks: [],
       routine: [
         { id: '1', period: 'Morning', time: '06:30 AM - 07:30 AM', title: 'Hydration & Morning Fitness', completed: false, image: '', yt: 'https://www.youtube.com/watch?v=UBMk30rjy0o' },
-        { id: '2', period: 'Deep Work', time: '09:00 AM - 12:30 PM', title: 'Deep Work Sprint 1 (Priority Project)', completed: false, image: '', yt: '' },
+        { id: '2', period: 'Deep Work', time: '09:00 AM - 12:30 PM', title: 'Deep Work Sprint 1', completed: false, image: '', yt: '' },
         { id: '3', period: 'Afternoon', time: '02:00 PM - 04:30 PM', title: 'Execution, Calls & Admin', completed: false, image: '', yt: '' },
         { id: '4', period: 'Evening & Winddown', time: '09:00 PM - 10:00 PM', title: 'Daily Review & Next Day Prep', completed: false, image: '', yt: '' }
       ],
@@ -456,7 +455,6 @@
     let tempRoutineImage = '';
     let parsedPdfItems = [];
 
-    // INIT
     window.addEventListener('DOMContentLoaded', () => {
       loadState();
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
@@ -477,12 +475,10 @@
       renderAll();
     }
 
-    // TABS
     function switchTab(tab) {
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
       document.getElementById(`view-${tab}`).classList.remove('hidden');
 
-      // Desktop styles
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-indigo-600', 'text-white');
         btn.classList.add('text-slate-400');
@@ -493,7 +489,6 @@
         dActive.classList.remove('text-slate-400');
       }
 
-      // Mobile styles
       ['tasks', 'routine', 'calls', 'expenses'].forEach(t => {
         const mActive = document.getElementById(`mtab-${t}`);
         if (mActive) {
@@ -506,7 +501,6 @@
       });
     }
 
-    // RENDER HELPERS
     function renderAll() {
       renderTasks();
       renderRoutine();
@@ -515,7 +509,6 @@
       lucide.createIcons();
     }
 
-    // 1. TASKS
     function renderTasks() {
       const list = document.getElementById('tasks-list');
       const stats = document.getElementById('task-stats');
@@ -566,7 +559,6 @@
       saveState();
     }
 
-    // 2. ROUTINE (With Image and YouTube Player)
     function renderRoutine() {
       const container = document.getElementById('routine-blocks-container');
       const periods = ['Morning', 'Deep Work', 'Afternoon', 'Evening & Winddown'];
@@ -580,7 +572,7 @@
               <span class="text-[10px]">${items.filter(i => i.completed).length}/${items.length} Done</span>
             </div>
             <div class="space-y-2">
-              ${items.length === 0 ? `<div class="p-3 text-xs text-slate-600 bg-slate-900/30 rounded-xl border border-dashed border-slate-800">No scheduled items for this block.</div>` : ''}
+              ${items.length === 0 ? `<div class="p-3 text-xs text-slate-600 bg-slate-900/30 rounded-xl border border-dashed border-slate-800">No scheduled items.</div>` : ''}
               ${items.map(r => `
                 <div class="p-3 bg-slate-900/80 rounded-xl border ${r.completed ? 'border-indigo-500/30 bg-indigo-950/10' : 'border-slate-800'} space-y-2">
                   <div class="flex items-center justify-between">
@@ -645,7 +637,6 @@
       saveState();
     }
 
-    // YOUTUBE EMBED MODAL
     function openYtModal(url) {
       let videoId = '';
       if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
@@ -663,11 +654,10 @@
       document.getElementById('modal-yt-player').classList.add('hidden');
     }
 
-    // 3. CALLS
     function renderCalls() {
       const list = document.getElementById('calls-list');
       if (!appData.calls.length) {
-        list.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No scheduled calls. Tap 'Add Call' to log someone to contact.</div>`;
+        list.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No scheduled calls logged.</div>`;
         return;
       }
       list.innerHTML = appData.calls.map(c => `
@@ -702,7 +692,6 @@
       saveState();
     }
 
-    // 4. EXPENSES (Rupees ₹)
     function renderExpenses() {
       const total = appData.expenses.reduce((acc, x) => acc + Number(x.amount), 0);
       const budget = appData.budget || 25000;
@@ -720,7 +709,7 @@
 
       const list = document.getElementById('expense-list');
       if (!appData.expenses.length) {
-        list.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No expenses recorded for this month yet.</div>`;
+        list.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No expenses recorded yet.</div>`;
         return;
       }
       list.innerHTML = appData.expenses.slice().reverse().map(x => `
@@ -760,7 +749,6 @@
       saveState();
     }
 
-    // 5. PDF PARSER (Runs entirely in browser via PDF.js)
     async function handlePdfUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -792,9 +780,9 @@
         preview.classList.remove('hidden');
 
         if (parsedPdfItems.length === 0) {
-          itemsList.innerHTML = `<p class="text-amber-400">Could not extract routine times automatically. Text sample extracted: "${fullText.slice(0, 150)}..."</p>`;
+          itemsList.innerHTML = `<p class="text-amber-400">Could not extract routine times automatically.</p>`;
         } else {
-          itemsList.innerHTML = parsedPdfItems.map((item, idx) => `
+          itemsList.innerHTML = parsedPdfItems.map((item) => `
             <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between items-center">
               <div>
                 <span class="text-indigo-400 font-mono text-[10px]">${item.time}</span>
@@ -854,7 +842,6 @@
       switchTab('routine');
     }
 
-    // MODAL TOGGLES
     function openPdfModal() { document.getElementById('modal-pdf').classList.remove('hidden'); lucide.createIcons(); }
     function closePdfModal() { document.getElementById('modal-pdf').classList.add('hidden'); }
     function openAddRoutineModal() {
@@ -881,7 +868,6 @@
       if (b) { appData.budget = b; saveState(); closeSettingsModal(); }
     }
 
-    // JSON EXPORT/IMPORT
     function exportDataJson() {
       const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
