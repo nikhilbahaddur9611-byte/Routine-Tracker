@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>LifeOS • Personal Command Center</title>
 
+  <!-- PWA & Mobile Standalone Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#4f46e5">
 
-  <!-- SVG App Icon for Chrome Installation -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%234f46e5'/%3E%3Cpath d='M280 48L120 288h128l-32 176 176-240H264z' fill='white'/%3E%3C/svg%3E">
-
-  <!-- Manifest with embedded icon data -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"LifeOS","short_name":"LifeOS","start_url":".","display":"standalone","background_color":"#090d16","theme_color":"#4f46e5","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"%3E%3Crect width=\"512\" height=\"512\" rx=\"128\" fill=\"%234f46e5\"/%3E%3Cpath d=\"M280 48L120 288h128l-32 176 176-240H264z\" fill=\"white\"/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
+  <!-- Real Web Manifest File -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/192/906/906334.png">
 
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- PDF.js -->
+  <!-- PDF.js for client-side offline PDF parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -45,21 +44,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-
-  <script>
-    // Service Worker registration required for Chrome PWA installability
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swBlob = new Blob([
-          `self.addEventListener('install', e => self.skipWaiting());
-           self.addEventListener('activate', e => clients.claim());
-           self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`
-        ], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
-      });
-    }
-  </script>
-</head>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-24 md:pb-6">
 
@@ -113,7 +97,7 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto w-full px-4 pt-4 flex-1">
     
-    <!-- TASKS -->
+    <!-- 1. TASKS -->
     <section id="view-tasks" class="tab-view block space-y-4">
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
@@ -127,7 +111,7 @@
       <div id="tasks-list" class="space-y-2"></div>
     </section>
 
-    <!-- ROUTINE -->
+    <!-- 2. ROUTINE -->
     <section id="view-routine" class="tab-view hidden space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
@@ -146,12 +130,12 @@
       <div class="space-y-6" id="routine-blocks-container"></div>
     </section>
 
-    <!-- CALLS -->
+    <!-- 3. CALLS -->
     <section id="view-calls" class="tab-view hidden space-y-4">
       <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
           <h2 class="text-sm font-semibold text-white">Call Tracker & Outbound</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for mobile</p>
+          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for your mobile</p>
         </div>
         <button onclick="openAddCallModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
           <i data-lucide="phone-outgoing" class="w-3.5 h-3.5"></i> Add Call
@@ -160,7 +144,7 @@
       <div id="calls-list" class="space-y-2"></div>
     </section>
 
-    <!-- EXPENSES (₹) -->
+    <!-- 4. EXPENSES (₹) -->
     <section id="view-expenses" class="tab-view hidden space-y-4">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
@@ -192,7 +176,7 @@
           <option value="Work & Gear">💼 Work</option>
           <option value="Other">🏷️ Other</option>
         </select>
-        <input type="text" id="quick-exp-note" placeholder="Note (e.g., Grocery, Fuel)"
+        <input type="text" id="quick-exp-note" placeholder="Note (e.g., Grocery, Petrol)"
           class="flex-1 min-w-[140px] bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
         <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Log (₹)
@@ -232,7 +216,7 @@
 
   <!-- MODALS -->
 
-  <!-- PDF MODAL -->
+  <!-- PDF UPLOAD MODAL -->
   <div id="modal-pdf" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -277,7 +261,7 @@
     </div>
   </div>
 
-  <!-- ROUTINE MODAL -->
+  <!-- ROUTINE MODAL (With Image & YouTube Attachment) -->
   <div id="modal-add-routine" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -350,7 +334,7 @@
       <form onsubmit="handleSaveTask(event)" class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-400 mb-1">Task Title</label>
-          <input type="text" id="task-title" placeholder="e.g., Follow up on report" required
+          <input type="text" id="task-title" placeholder="e.g., Review project proposal" required
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -385,7 +369,7 @@
       <form onsubmit="handleSaveCall(event)" class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-400 mb-1">Name</label>
-          <input type="text" id="call-name" placeholder="e.g., Client / Friend" required
+          <input type="text" id="call-name" placeholder="e.g., Client / Contact" required
             class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
@@ -406,7 +390,7 @@
     </div>
   </div>
 
-  <!-- YT MODAL -->
+  <!-- YOUTUBE MODAL -->
   <div id="modal-yt-player" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -478,6 +462,13 @@
         weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
       });
       renderAll();
+
+      // Register standard service worker file
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker Active:', reg.scope))
+          .catch(err => console.error('SW Registration Failed:', err));
+      }
     });
 
     function loadState() {
@@ -907,21 +898,5 @@
       reader.readAsText(file);
     }
   </script>
-  <script>
-  // Register an in-memory Service Worker to satisfy Chrome's PWA install criteria
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const swCode = `
-        self.addEventListener('install', (e) => self.skipWaiting());
-        self.addEventListener('activate', (e) => clients.claim());
-        self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob))
-        .then(() => console.log('Service Worker Registered'))
-        .catch((err) => console.log('SW registration fallback:', err));
-    });
-  }
-</script>
 </body>
 </html>
