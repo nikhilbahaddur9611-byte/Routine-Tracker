@@ -1,1594 +1,908 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>OmniSync Personal OS</title>
-
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LifeOS • Personal Command Center</title>
+  
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- PDF.js for client-side offline PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-              900: '#14532d',
-            },
-            surface: {
-              800: '#1e293b',
-              900: '#0f172a',
-              950: '#020617',
-            }
+            brand: { 50: '#eef2ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+            dark: { 900: '#090d16', 800: '#0f172a', 700: '#1e293b', 600: '#334155' }
           }
         }
       }
     }
   </script>
 
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- PDF.js Client-Side Parser -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-  </script>
-
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    .mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    /* Hide scrollbars for clean mobile view */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    /* Smooth transitions */
-    .view-card {
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-black">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-24 md:pb-6">
 
-  <!-- Top Navigation & Status Bar -->
-  <header class="sticky top-0 z-40 bg-surface-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 sm:px-6">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      
-      <!-- Logo & Date -->
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-brand-500/20 text-slate-950 font-black">
-          <i data-lucide="zap" class="w-5 h-5 fill-current"></i>
+  <!-- TOP APP BAR -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i data-lucide="zap" class="w-5 h-5 text-white"></i>
         </div>
         <div>
-          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-            OmniSync <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-mono border border-brand-500/20">v1.2</span>
+          <h1 class="font-bold text-base md:text-lg tracking-tight leading-tight flex items-center gap-2">
+            LifeOS
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">OFFLINE-FIRST</span>
           </h1>
-          <p id="current-date-display" class="text-xs text-slate-400 font-medium"></p>
+          <p id="current-date" class="text-xs text-slate-400 font-medium"></p>
         </div>
       </div>
 
-      <!-- Sync Status & Cloud Account -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Online/Offline Indicator -->
-        <div id="connection-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 transition-colors">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="connection-text" class="hidden sm:inline">Online</span>
-        </div>
-
-        <!-- Sync Activity Indicator -->
-        <div id="sync-spinner" class="hidden text-slate-400 text-xs items-center gap-1">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
-        </div>
-
-        <!-- Quick PDF Routine Upload Button in Header -->
-        <button onclick="openPdfModal()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-brand-400 hover:bg-brand-500/20 text-xs font-semibold transition" title="Upload Routine PDF directly">
-          <i data-lucide="file-up" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Upload PDF</span>
+      <div class="flex items-center gap-2">
+        <button onclick="openPdfModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition">
+          <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Upload PDF Routine</span>
+          <span class="sm:hidden">PDF</span>
         </button>
-
-        <!-- Auth Button / Avatar -->
-        <button id="auth-modal-trigger" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-200 hover:border-slate-700 transition">
-          <i data-lucide="user" class="w-4 h-4 text-brand-400"></i>
-          <span id="auth-btn-label">Cloud Sync</span>
-        </button>
-
-        <!-- Quick Backup -->
-        <button id="export-json-btn" title="Backup all data to JSON" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition">
-          <i data-lucide="download" class="w-4 h-4"></i>
+        <button onclick="openSettingsModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Tab Navigation Bar (Bottom) -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-950/95 backdrop-blur-lg border-t border-slate-800/90 px-3 py-2">
-    <div class="grid grid-cols-4 gap-1 max-w-md mx-auto">
-      <button onclick="switchTab('today')" data-tab="today" class="nav-btn flex flex-col items-center py-1.5 rounded-xl text-brand-400">
-        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-        <span class="text-[10px] font-bold mt-1">Today</span>
+  <!-- DESKTOP TOP NAV TABS -->
+  <div class="hidden md:block max-w-6xl mx-auto w-full px-4 pt-4">
+    <div class="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+      <button onclick="switchTab('tasks')" id="dtab-tasks" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition bg-indigo-600 text-white">
+        <i data-lucide="check-square" class="w-4 h-4"></i> Tasks & Goals
       </button>
-      <button onclick="switchTab('routine')" data-tab="routine" class="nav-btn flex flex-col items-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200">
-        <i data-lucide="repeat" class="w-5 h-5"></i>
-        <span class="text-[10px] font-medium mt-1">Routine</span>
+      <button onclick="switchTab('routine')" id="dtab-routine" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition text-slate-400 hover:text-white">
+        <i data-lucide="calendar" class="w-4 h-4"></i> Dynamic Routine
       </button>
-      <button onclick="switchTab('calls')" data-tab="calls" class="nav-btn flex flex-col items-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200">
-        <i data-lucide="phone-call" class="w-5 h-5"></i>
-        <span class="text-[10px] font-medium mt-1">Calls</span>
+      <button onclick="switchTab('calls')" id="dtab-calls" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition text-slate-400 hover:text-white">
+        <i data-lucide="phone-call" class="w-4 h-4"></i> Calls & Contacts
       </button>
-      <button onclick="switchTab('expenses')" data-tab="expenses" class="nav-btn flex flex-col items-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200">
-        <i data-lucide="wallet" class="w-5 h-5"></i>
-        <span class="text-[10px] font-medium mt-1">Budget</span>
+      <button onclick="switchTab('expenses')" id="dtab-expenses" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition text-slate-400 hover:text-white">
+        <i data-lucide="wallet" class="w-4 h-4"></i> Expenses (₹)
       </button>
     </div>
-  </nav>
+  </div>
 
-  <!-- Main Multi-Column Content Area -->
-  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 pb-24 md:pb-8">
-
-    <!-- Desktop Navigation Pills -->
-    <div class="hidden md:flex items-center justify-between mb-6 pb-3 border-b border-slate-800">
-      <div class="flex items-center space-x-2">
-        <button onclick="switchTab('today')" data-desk-tab="today" class="desk-nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-brand-500 text-slate-950 flex items-center gap-2 shadow-sm transition">
-          <i data-lucide="check-circle-2" class="w-4 h-4"></i> Tasks & Focus
-        </button>
-        <button onclick="switchTab('routine')" data-desk-tab="routine" class="desk-nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 flex items-center gap-2 transition">
-          <i data-lucide="repeat" class="w-4 h-4"></i> Daily Routine
-        </button>
-        <button onclick="switchTab('calls')" data-desk-tab="calls" class="desk-nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 flex items-center gap-2 transition">
-          <i data-lucide="phone-call" class="w-4 h-4"></i> Calls & Agendas
-        </button>
-        <button onclick="switchTab('expenses')" data-desk-tab="expenses" class="desk-nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 flex items-center gap-2 transition">
-          <i data-lucide="wallet" class="w-4 h-4"></i> Expenses & Budget
-        </button>
-      </div>
-
-      <!-- Quick Metrics Pill -->
-      <div class="flex items-center gap-4 text-xs font-mono text-slate-400">
-        <div>Pending Tasks: <span id="metric-tasks-count" class="text-white font-bold">0</span></div>
-        <div class="w-1 h-3 bg-slate-800"></div>
-        <div>Month Spend: <span id="metric-spend-amt" class="text-emerald-400 font-bold">$0.00</span></div>
-      </div>
-    </div>
-
-    <!-- TAB 1: TODAY TASKS & GOALS -->
-    <section id="view-today" class="view-panel space-y-5">
-      <!-- Quick Task Input -->
-      <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-3 sm:p-4 shadow-xl">
-        <form id="task-form" class="flex flex-col sm:flex-row gap-2.5">
-          <div class="relative flex-1">
-            <input 
-              type="text" 
-              id="task-input" 
-              placeholder="What needs to get done right now? (Press Enter)" 
-              required
-              class="w-full bg-surface-950 border border-slate-800 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-500 transition"
-            />
-          </div>
-          <div class="flex items-center gap-2">
-            <select id="task-priority" class="bg-surface-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-3 focus:outline-none focus:border-brand-500">
-              <option value="high">🔴 High</option>
-              <option value="medium" selected>🟡 Medium</option>
-              <option value="low">🟢 Low</option>
-            </select>
-            <select id="task-category" class="bg-surface-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-3 focus:outline-none focus:border-brand-500">
-              <option value="Work">💼 Work</option>
-              <option value="Personal">🏡 Personal</option>
-              <option value="Health">⚡ Health</option>
-              <option value="Urgent">🔥 Urgent</option>
-            </select>
-            <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-brand-500/20 whitespace-nowrap">
-              <i data-lucide="plus" class="w-4 h-4"></i> Add
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Tasks List Grouping -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <!-- Main Task List (2 Cols on desktop) -->
-        <div class="lg:col-span-2 space-y-3">
-          <div class="flex items-center justify-between px-1">
-            <h2 class="text-xs font-bold tracking-wider text-slate-400 uppercase">Daily Action Items</h2>
-            <div class="flex items-center gap-2">
-              <button onclick="clearCompletedTasks()" class="text-xs text-slate-500 hover:text-slate-300 font-medium transition">Clear Completed</button>
-            </div>
-          </div>
-          <div id="tasks-container" class="space-y-2">
-            <!-- Dynamically Rendered Tasks -->
-          </div>
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto w-full px-4 pt-4 flex-1">
+    
+    <!-- ===================== SECTION 1: TASKS ===================== -->
+    <section id="view-tasks" class="tab-view block space-y-4">
+      <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+        <div>
+          <h2 class="text-sm font-semibold text-white">Daily Tasks & Target Goals</h2>
+          <p id="task-stats" class="text-xs text-slate-400 mt-0.5">0 of 0 completed</p>
         </div>
-
-        <!-- Today Summary Card -->
-        <div class="space-y-4">
-          <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-5">
-            <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <i data-lucide="target" class="w-4 h-4 text-brand-400"></i> Daily Focus Progress
-            </h3>
-            <div class="space-y-2">
-              <div class="flex justify-between text-xs font-mono">
-                <span class="text-slate-400">Completion</span>
-                <span id="task-progress-percent" class="text-brand-400 font-bold">0%</span>
-              </div>
-              <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-                <div id="task-progress-bar" class="bg-gradient-to-r from-brand-600 to-brand-400 h-full w-0 transition-all duration-300"></div>
-              </div>
-            </div>
-
-            <!-- Quick Day Notes / Mind Dump -->
-            <div class="mt-5 pt-4 border-t border-slate-800">
-              <label class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2 flex items-center justify-between">
-                <span>Quick Scratchpad</span>
-                <span id="scratchpad-saved" class="text-[10px] text-brand-400 opacity-0 transition-opacity">Saved</span>
-              </label>
-              <textarea 
-                id="scratchpad-input" 
-                rows="4" 
-                placeholder="Spontaneous ideas, phone numbers, quick memos..." 
-                class="w-full bg-surface-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-brand-500 transition resize-none"
-              ></textarea>
-            </div>
-          </div>
-        </div>
+        <button onclick="openAddTaskModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-lg shadow-indigo-600/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Task
+        </button>
       </div>
+
+      <div id="tasks-list" class="space-y-2"></div>
     </section>
 
-    <!-- TAB 2: DYNAMIC ROUTINE PLANNER -->
-    <section id="view-routine" class="view-panel hidden space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
+    <!-- ===================== SECTION 2: ROUTINE ===================== -->
+    <section id="view-routine" class="tab-view hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
         <div>
-          <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <i data-lucide="repeat" class="w-4 h-4 text-brand-400"></i> Dynamic Daily Routine
-          </h2>
-          <p class="text-xs text-slate-400">Edit, reorder, or upload a routine PDF anytime to extract habits instantly.</p>
+          <h2 class="text-sm font-semibold text-white">Flexible Routine Schedule</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Edit, reorder, attach videos or images, or update directly via PDF</p>
         </div>
-        <div class="flex items-center flex-wrap gap-2">
-          <button onclick="openPdfModal()" class="px-3 py-2 rounded-xl text-xs font-bold bg-brand-500/15 text-brand-300 border border-brand-500/30 hover:bg-brand-500/25 transition flex items-center gap-1.5">
-            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Import from PDF
+        <div class="flex items-center gap-2">
+          <button onclick="openPdfModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="file-up" class="w-3.5 h-3.5"></i> Import PDF
           </button>
-          <button onclick="resetRoutineChecks()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1.5">
-            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Checkmarks
-          </button>
-          <button onclick="openAddRoutineModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-brand-500 hover:bg-brand-600 text-slate-950 transition flex items-center gap-1.5">
+          <button onclick="openAddRoutineModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Block
           </button>
         </div>
       </div>
 
-      <!-- Routine Blocks by Time of Day -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="routine-grid">
-        <!-- Morning -->
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-            <div class="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-              <i data-lucide="sun" class="w-4 h-4"></i> Morning Boost
-            </div>
-            <span class="text-[10px] font-mono text-slate-500">6:00 - 10:00</span>
-          </div>
-          <div id="routine-list-morning" class="space-y-2 flex-1"></div>
-        </div>
-
-        <!-- Midday / Deep Work -->
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-            <div class="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-wider">
-              <i data-lucide="briefcase" class="w-4 h-4"></i> Deep Focus
-            </div>
-            <span class="text-[10px] font-mono text-slate-500">10:00 - 14:00</span>
-          </div>
-          <div id="routine-list-focus" class="space-y-2 flex-1"></div>
-        </div>
-
-        <!-- Afternoon -->
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-            <div class="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
-              <i data-lucide="activity" class="w-4 h-4"></i> Afternoon Flow
-            </div>
-            <span class="text-[10px] font-mono text-slate-500">14:00 - 18:00</span>
-          </div>
-          <div id="routine-list-afternoon" class="space-y-2 flex-1"></div>
-        </div>
-
-        <!-- Evening / Wind-down -->
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-            <div class="flex items-center gap-2 text-xs font-bold text-purple-400 uppercase tracking-wider">
-              <i data-lucide="moon" class="w-4 h-4"></i> Wind Down
-            </div>
-            <span class="text-[10px] font-mono text-slate-500">18:00 - 22:30</span>
-          </div>
-          <div id="routine-list-night" class="space-y-2 flex-1"></div>
-        </div>
-      </div>
+      <!-- Time Blocks -->
+      <div class="space-y-6" id="routine-blocks-container"></div>
     </section>
 
-    <!-- TAB 3: CALLS & MEETINGS TRACKER -->
-    <section id="view-calls" class="view-panel hidden space-y-5">
-      <!-- Quick Call Input -->
-      <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Log Call / Agenda</h2>
-        <form id="call-form" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-          <input 
-            type="text" 
-            id="call-name" 
-            placeholder="Person / Client Name" 
-            required 
-            class="bg-surface-950 border border-slate-800 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-500"
-          />
-          <input 
-            type="tel" 
-            id="call-phone" 
-            placeholder="Phone number" 
-            class="bg-surface-950 border border-slate-800 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-500"
-          />
-          <input 
-            type="text" 
-            id="call-agenda" 
-            placeholder="Discussion topics / goal..." 
-            class="bg-surface-950 border border-slate-800 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-500"
-          />
-          <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition active:scale-95">
-            <i data-lucide="phone" class="w-4 h-4"></i> Schedule Call
-          </button>
-        </form>
+    <!-- ===================== SECTION 3: CALLS ===================== -->
+    <section id="view-calls" class="tab-view hidden space-y-4">
+      <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+        <div>
+          <h2 class="text-sm font-semibold text-white">Call Tracker & Outbound</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Direct phone call launcher for your mobile</p>
+        </div>
+        <button onclick="openAddCallModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+          <i data-lucide="phone-outgoing" class="w-3.5 h-3.5"></i> Add Call
+        </button>
       </div>
 
-      <!-- Calls Ledger -->
-      <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-          <h3 class="text-xs font-bold text-white tracking-wider uppercase">Pending Follow-ups & Calls</h3>
-          <span id="pending-calls-count" class="text-xs font-mono text-brand-400 font-bold">0 Pending</span>
-        </div>
-        <div id="calls-container" class="space-y-2.5">
-          <!-- Calls injected here -->
-        </div>
-      </div>
+      <div id="calls-list" class="space-y-2"></div>
     </section>
 
-    <!-- TAB 4: MONTHLY EXPENSES TRACKER -->
-    <section id="view-expenses" class="view-panel hidden space-y-5">
-      <!-- Top Overview Metrics -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
-          <div class="text-xs font-mono text-slate-400">Total Spent This Month</div>
-          <div id="expense-month-total" class="text-2xl font-black text-white mt-1">$0.00</div>
-          <div class="text-[11px] text-slate-500 mt-1" id="expense-burn-rate">Burn: $0.00 / day</div>
+    <!-- ===================== SECTION 4: EXPENSES (₹) ===================== -->
+    <section id="view-expenses" class="tab-view hidden space-y-4">
+      <!-- Monthly Overview Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">This Month</span>
+          <p id="expense-total" class="text-xl font-bold text-white mt-1">₹0</p>
         </div>
-
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
-          <div class="flex justify-between items-center text-xs font-mono">
-            <span class="text-slate-400">Budget Target</span>
-            <button onclick="editBudgetPrompt()" class="text-brand-400 text-[10px] hover:underline font-sans font-semibold">Change</button>
-          </div>
-          <div id="budget-target-val" class="text-2xl font-black text-white mt-1">$2,500.00</div>
-          <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden mt-2 border border-slate-800">
-            <div id="budget-progress-bar" class="bg-brand-500 h-full w-0"></div>
-          </div>
+        <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Daily Average</span>
+          <p id="expense-daily-avg" class="text-xl font-bold text-indigo-400 mt-1">₹0</p>
         </div>
-
-        <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
-          <div class="text-xs font-mono text-slate-400">Top Spend Category</div>
-          <div id="expense-top-cat" class="text-xl font-bold text-slate-200 mt-1">-</div>
-          <div id="expense-count-summary" class="text-[11px] text-slate-500 mt-1">0 transactions logged</div>
+        <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Monthly Budget</span>
+          <p id="expense-budget-disp" class="text-xl font-bold text-slate-300 mt-1">₹25,000</p>
+        </div>
+        <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Budget Left</span>
+          <p id="expense-budget-left" class="text-xl font-bold text-emerald-400 mt-1">₹25,000</p>
         </div>
       </div>
 
-      <!-- Rapid 3-Second Add Expense Form -->
-      <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-brand-400"></i> Fast Expense Entry
-        </h3>
-        <form id="expense-form" class="space-y-3">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <div class="relative">
-              <span class="absolute left-3.5 top-2.5 text-sm font-mono text-slate-500">$</span>
-              <input 
-                type="number" 
-                step="0.01" 
-                id="exp-amount" 
-                placeholder="0.00" 
-                required 
-                class="w-full bg-surface-950 border border-slate-800 text-white font-mono text-sm rounded-xl pl-8 pr-4 py-2.5 focus:outline-none focus:border-brand-500"
-              />
-            </div>
-            <input 
-              type="text" 
-              id="exp-note" 
-              placeholder="What did you buy? (e.g. Groceries)" 
-              required
-              class="w-full bg-surface-950 border border-slate-800 text-white text-xs rounded-xl px-4 py-2.5 focus:outline-none focus:border-brand-500"
-            />
-            <input 
-              type="date" 
-              id="exp-date" 
-              class="w-full bg-surface-950 border border-slate-800 text-white text-xs rounded-xl px-4 py-2.5 focus:outline-none focus:border-brand-500"
-            />
-          </div>
+      <!-- Quick Logger -->
+      <form onsubmit="handleQuickExpense(event)" class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex flex-wrap gap-2 items-center">
+        <input type="number" id="quick-exp-amount" placeholder="Amount (₹)" required step="any"
+          class="w-32 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+        <select id="quick-exp-cat" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+          <option value="Food & Dining">🍔 Food</option>
+          <option value="Commute & Fuel">🚗 Commute</option>
+          <option value="Bills & Utilities">⚡ Bills</option>
+          <option value="Shopping & Personal">🛍️ Shopping</option>
+          <option value="Work & Gear">💼 Work</option>
+          <option value="Other">🏷️ Other</option>
+        </select>
+        <input type="text" id="quick-exp-note" placeholder="Note (e.g., Grocery, Petrol)"
+          class="flex-1 min-w-[140px] bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+        <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Log (₹)
+        </button>
+      </form>
 
-          <!-- Quick Category Tap Selector -->
-          <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <span class="text-[11px] text-slate-500 whitespace-nowrap">Category:</span>
-            <div id="category-pills-container" class="flex items-center gap-1.5">
-              <!-- Rendered Category Pills -->
-            </div>
-            <button type="button" onclick="addCustomCategoryPrompt()" class="px-2.5 py-1 text-[11px] rounded-lg border border-dashed border-slate-700 text-slate-400 hover:text-white transition whitespace-nowrap">
-              + Custom
-            </button>
-          </div>
-
-          <div class="flex justify-end">
-            <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-brand-500/20">
-              <i data-lucide="check" class="w-4 h-4"></i> Record Expense
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Expense Ledger & Filter -->
-      <div class="bg-surface-900 border border-slate-800/80 rounded-2xl p-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800 mb-3">
-          <h3 class="text-xs font-bold text-white tracking-wider uppercase">Expense History</h3>
-          <div class="flex items-center gap-2">
-            <select id="expense-month-filter" class="bg-surface-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none">
-              <!-- Injected dynamically -->
-            </select>
-          </div>
+      <!-- Expense Ledger Table -->
+      <div class="bg-slate-900/60 rounded-xl border border-slate-800 overflow-hidden">
+        <div class="p-3 border-b border-slate-800 font-semibold text-xs text-slate-400 flex justify-between">
+          <span>RECENT EXPENSES</span>
+          <span id="expense-count">0 transactions</span>
         </div>
-        <div id="expense-list-container" class="space-y-2">
-          <!-- Expenses list -->
-        </div>
+        <div id="expense-list" class="divide-y divide-slate-800/60 max-h-96 overflow-y-auto"></div>
       </div>
     </section>
 
   </main>
 
-  <!-- MODAL: Cloud Sync / Authentication -->
-  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-surface-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl relative space-y-4">
-      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
+  <!-- ===================== MOBILE BOTTOM DOCK ===================== -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-3 py-2 flex items-center justify-around">
+    <button onclick="switchTab('tasks')" id="mtab-tasks" class="flex flex-col items-center gap-1 text-indigo-400 font-semibold text-[10px]">
+      <i data-lucide="check-square" class="w-5 h-5"></i>
+      <span>Tasks</span>
+    </button>
+    <button onclick="switchTab('routine')" id="mtab-routine" class="flex flex-col items-center gap-1 text-slate-400 text-[10px]">
+      <i data-lucide="calendar" class="w-5 h-5"></i>
+      <span>Routine</span>
+    </button>
+    <button onclick="switchTab('calls')" id="mtab-calls" class="flex flex-col items-center gap-1 text-slate-400 text-[10px]">
+      <i data-lucide="phone-call" class="w-5 h-5"></i>
+      <span>Calls</span>
+    </button>
+    <button onclick="switchTab('expenses')" id="mtab-expenses" class="flex flex-col items-center gap-1 text-slate-400 text-[10px]">
+      <i data-lucide="wallet" class="w-5 h-5"></i>
+      <span>Expenses</span>
+    </button>
+  </nav>
 
-      <div class="text-center">
-        <div class="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center mx-auto mb-2">
-          <i data-lucide="cloud" class="w-6 h-6"></i>
+  <!-- ===================== MODALS ===================== -->
+
+  <!-- 1. PDF UPLOAD MODAL -->
+  <div id="modal-pdf" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
+          <h3 class="font-bold text-sm text-white">Import Routine from PDF</h3>
         </div>
-        <h3 class="text-base font-bold text-white">Private Cloud Sync</h3>
-        <p class="text-xs text-slate-400 mt-1">Authenticate once to sync your tasks, routines, and expenses privately across your phone and laptop.</p>
+        <button onclick="closePdfModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
-      <!-- Auth State Info -->
-      <div id="auth-state-info" class="p-3 bg-surface-950 rounded-xl border border-slate-800 text-xs">
-        <div class="flex items-center justify-between">
-          <span class="text-slate-400">Current Status:</span>
-          <span id="auth-status-badge" class="text-amber-400 font-semibold">Offline / Local Mode</span>
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+        <label class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition bg-slate-800/40">
+          <i data-lucide="upload-cloud" class="w-8 h-8 text-indigo-400 mb-2"></i>
+          <span class="text-xs font-semibold text-slate-200 text-center">Tap to select your Routine PDF</span>
+          <span class="text-[11px] text-slate-400 mt-1">Parses directly in browser (100% offline & private)</span>
+          <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" onchange="handlePdfUpload(event)">
+        </label>
+
+        <div id="pdf-parser-status" class="hidden text-xs text-indigo-300 text-center py-2 flex items-center justify-center gap-2">
+          <span class="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></span>
+          Extracting routine items...
         </div>
-        <div id="user-details-row" class="hidden mt-2 pt-2 border-t border-slate-800/80">
-          <div class="text-slate-400 text-[11px]">User ID:</div>
-          <div id="user-id-text" class="font-mono text-[10px] text-slate-300 truncate"></div>
+
+        <div id="pdf-preview-box" class="hidden space-y-2">
+          <span class="text-xs font-bold text-slate-300">Extracted Items Preview:</span>
+          <div id="pdf-parsed-items" class="max-h-48 overflow-y-auto space-y-1.5 p-2 bg-slate-950 rounded-lg border border-slate-800 text-xs"></div>
         </div>
       </div>
 
-      <!-- Sign In / Sign Out actions -->
-      <div id="auth-action-panel" class="space-y-3">
-        <button id="google-signin-btn" class="w-full bg-white text-slate-900 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-slate-100 transition shadow">
-          <svg class="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          Sign In with Google
-        </button>
-
-        <div class="relative flex py-1 items-center">
-          <div class="flex-grow border-t border-slate-800"></div>
-          <span class="flex-shrink mx-3 text-[10px] text-slate-500 uppercase">or Quick Guest Sync</span>
-          <div class="flex-grow border-t border-slate-800"></div>
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+          <input type="checkbox" id="pdf-replace-checkbox" checked class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+          <span>Replace existing routine</span>
+        </label>
+        <div class="flex items-center gap-2">
+          <button onclick="closePdfModal()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white">Cancel</button>
+          <button id="pdf-save-btn" disabled onclick="saveParsedRoutine()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition">
+            Apply to Routine
+          </button>
         </div>
-
-        <button id="anon-signin-btn" class="w-full bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-slate-700 transition">
-          Generate Private Cloud Device Token
-        </button>
-
-        <button id="signout-btn" class="hidden w-full bg-red-950/60 border border-red-800 text-red-300 font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-red-900/80 transition">
-          Sign Out of Cloud Sync
-        </button>
       </div>
-
-      <p class="text-[11px] text-slate-500 text-center leading-relaxed">
-        Offline-first: OmniSync persists everything immediately to your browser cache. When online, changes mirror safely to your personal account.
-      </p>
     </div>
   </div>
 
-  <!-- MODAL: Add Routine Item -->
-  <div id="routine-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-surface-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl relative space-y-4">
-      <button onclick="closeRoutineModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-      <h3 class="text-sm font-bold text-white">Add Routine Block</h3>
+  <!-- 2. ADD ROUTINE ITEM MODAL (Supports Image & YouTube) -->
+  <div id="modal-add-routine" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-400"></i> Add Routine Block
+        </h3>
+        <button onclick="closeAddRoutineModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
 
-      <form id="add-routine-form" class="space-y-3">
+      <form onsubmit="handleSaveRoutineItem(event)" class="space-y-3 text-xs">
         <div>
-          <label class="text-[11px] text-slate-400 block mb-1">Routine Habit Name</label>
-          <input type="text" id="routine-title" placeholder="e.g. 20-min Cold Shower & Stretch" required class="w-full bg-surface-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500" />
+          <label class="block text-slate-400 mb-1">Time Slot / Duration</label>
+          <input type="text" id="ritem-time" placeholder="e.g., 07:00 AM - 08:00 AM" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
-          <label class="text-[11px] text-slate-400 block mb-1">Target Window / Time</label>
-          <select id="routine-period" class="w-full bg-surface-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none">
-            <option value="morning">Morning (6:00 - 10:00)</option>
-            <option value="focus">Deep Focus (10:00 - 14:00)</option>
-            <option value="afternoon">Afternoon Flow (14:00 - 18:00)</option>
-            <option value="night">Wind Down (18:00 - 22:30)</option>
+          <label class="block text-slate-400 mb-1">Activity / Habit Name</label>
+          <input type="text" id="ritem-title" placeholder="e.g., Morning Workout & Hydration" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Routine Category</label>
+          <select id="ritem-period" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+            <option value="Morning">🌅 Morning Phase</option>
+            <option value="Deep Work">⚡ Deep Work & Focus</option>
+            <option value="Afternoon">☀️ Afternoon / Ops</option>
+            <option value="Evening & Winddown">🌙 Evening & Wind-down</option>
           </select>
         </div>
-        <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition">
-          Add Routine Item
-        </button>
+
+        <!-- YouTube Link Field -->
+        <div>
+          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
+            <i data-lucide="youtube" class="w-3.5 h-3.5 text-red-400"></i> YouTube Link (Optional)
+          </label>
+          <input type="url" id="ritem-yt" placeholder="https://youtube.com/watch?v=..."
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <!-- Image Upload / Attachment -->
+        <div>
+          <label class="block text-slate-400 mb-1 flex items-center gap-1.5">
+            <i data-lucide="image" class="w-3.5 h-3.5 text-indigo-400"></i> Routine Image / Chart (Optional)
+          </label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="ritem-image-file" accept="image/*" onchange="handleRoutineImageSelect(event)" class="hidden">
+            <button type="button" onclick="document.getElementById('ritem-image-file').click()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 font-medium">
+              Choose File
+            </button>
+            <span id="ritem-image-name" class="text-[11px] text-slate-400 truncate flex-1">No file chosen</span>
+          </div>
+          <div id="ritem-img-preview" class="hidden mt-2 relative w-full h-28 rounded-lg overflow-hidden border border-slate-700">
+            <img src="" id="ritem-img-preview-tag" class="w-full h-full object-cover" alt="Preview">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddRoutineModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Block</button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: PDF Routine Extractor (Direct Browser-based & Private) -->
-  <div id="pdf-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-surface-900 border border-slate-800 w-full max-w-xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 max-h-[90vh] flex flex-col">
-      <button onclick="closePdfModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <div>
-        <div class="flex items-center gap-2.5 mb-1">
-          <div class="p-2 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
-            <i data-lucide="file-up" class="w-5 h-5"></i>
+  <!-- 3. ADD TASK MODAL -->
+  <div id="modal-add-task" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Add Task / Goal</h3>
+        <button onclick="closeAddTaskModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleSaveTask(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Task Title</label>
+          <input type="text" id="task-title" placeholder="e.g., File GST invoice or update repo" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">Priority</label>
+            <select id="task-priority" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
+              <option value="High">🔴 High</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-white">Import Routine from PDF</h3>
-            <p class="text-[11px] text-slate-400">Processed 100% locally on your device. Never leaves your browser.</p>
+            <label class="block text-slate-400 mb-1">Due Date</label>
+            <input type="date" id="task-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100">
           </div>
         </div>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. ADD CALL MODAL -->
+  <div id="modal-add-call" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Log Call Contact</h3>
+        <button onclick="closeAddCallModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleSaveCall(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Name</label>
+          <input type="text" id="call-name" placeholder="e.g., Rahul Sharma" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Phone Number</label>
+          <input type="tel" id="call-phone" placeholder="+91 98765 43210" required
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Purpose / Agenda</label>
+          <input type="text" id="call-purpose" placeholder="e.g., Review project specs"
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="closeAddCallModal()" class="px-3 py-1.5 text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. YOUTUBE PLAYER MODAL -->
+  <div id="modal-yt-player" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="text-xs font-semibold text-white flex items-center gap-1.5">
+          <i data-lucide="youtube" class="w-4 h-4 text-red-500"></i> Video Reference
+        </span>
+        <button onclick="closeYtModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="aspect-video w-full rounded-xl overflow-hidden bg-black">
+        <iframe id="yt-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. SETTINGS & BACKUP MODAL -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Settings & Data Backup</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
-      <!-- Drag & Drop / File Select Box -->
-      <div 
-        id="pdf-dropzone" 
-        class="border-2 border-dashed border-slate-800 hover:border-brand-500/50 bg-surface-950/70 rounded-xl p-5 text-center cursor-pointer transition relative group"
-        onclick="document.getElementById('pdf-file-input').click()"
-      >
-        <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" onchange="handlePdfFileUpload(event)" />
-        <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-slate-500 group-hover:text-brand-400 transition mb-2"></i>
-        <p class="text-xs font-semibold text-slate-300">Tap to upload your new Routine PDF</p>
-        <p class="text-[10px] text-slate-500 mt-0.5">Works on mobile & laptop • Instant line-by-line smart extractor</p>
-      </div>
-
-      <!-- PDF Extraction Loading State -->
-      <div id="pdf-loading" class="hidden py-6 text-center space-y-2">
-        <i data-lucide="loader-2" class="w-7 h-7 mx-auto text-brand-400 animate-spin"></i>
-        <p class="text-xs text-slate-400 font-medium">Extracting schedules and habits from PDF...</p>
-      </div>
-
-      <!-- Extraction Preview & Selection Area -->
-      <div id="pdf-preview-section" class="hidden flex-1 overflow-y-auto space-y-3 min-h-0 pr-1">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-bold text-slate-300">Detected Items (<span id="detected-count">0</span>)</span>
-          <div class="flex gap-2 text-[11px]">
-            <button onclick="toggleAllExtracted(true)" class="text-brand-400 hover:underline">Select All</button>
-            <span class="text-slate-600">|</span>
-            <button onclick="toggleAllExtracted(false)" class="text-slate-400 hover:underline">Deselect All</button>
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Monthly Budget (₹)</label>
+          <div class="flex gap-2">
+            <input type="number" id="settings-budget-input" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white">
+            <button onclick="saveBudgetSetting()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold">Save</button>
           </div>
         </div>
 
-        <div id="extracted-items-container" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-          <!-- Dynamically populated checklist -->
-        </div>
-
-        <!-- Import Strategy Choice -->
-        <div class="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <label class="text-[11px] text-slate-400 flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="import-mode" value="replace" id="import-mode-replace" checked class="accent-brand-500">
-              Replace existing routine
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <span class="block text-slate-300 font-semibold">Manual Data Export / Backup</span>
+          <p class="text-[11px] text-slate-400">Download your entire database as a JSON file to transfer between devices anytime.</p>
+          <div class="flex gap-2">
+            <button onclick="exportDataJson()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 font-medium">Export JSON</button>
+            <label class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 font-medium text-center cursor-pointer">
+              Import JSON
+              <input type="file" accept=".json" class="hidden" onchange="importDataJson(event)">
             </label>
-            <label class="text-[11px] text-slate-400 flex items-center gap-1.5 cursor-pointer ml-2">
-              <input type="radio" name="import-mode" value="append" id="import-mode-append" class="accent-brand-500">
-              Add to current routine
-            </label>
           </div>
-
-          <button onclick="confirmPdfImport()" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
-            <i data-lucide="check" class="w-4 h-4"></i> Apply Routine
-          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Firebase Scripts (Modular v11.6.1) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      signInAnonymously, 
-      signInWithCustomToken, 
-      GoogleAuthProvider, 
-      signInWithPopup, 
-      signOut, 
-      onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      getDoc, 
-      onSnapshot,
-      enableIndexedDbPersistence
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // ----------------------------------------------------
-    // INITIAL CONFIG & STATE MANAGEMENT
-    // ----------------------------------------------------
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'omnisync-os-prod';
-    let firebaseConfig = null;
-    let auth = null;
-    let db = null;
-    let currentUser = null;
-
-    if (typeof __firebase_config !== 'undefined') {
-      try {
-        firebaseConfig = JSON.parse(__firebase_config);
-      } catch (e) {
-        console.warn("Could not parse default __firebase_config", e);
-      }
-    }
-
-    // High performance local state
-    const LOCAL_KEY = 'omnisync_local_state_v1';
-    const DEFAULT_STATE = {
-      budget: 2500,
-      scratchpad: '',
-      categories: ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Other'],
-      selectedCategory: 'Food',
-      tasks: [
-        { id: '1', title: 'Complete priority client review', priority: 'high', category: 'Work', done: false, date: new Date().toISOString() },
-        { id: '2', title: 'Hydrate 3 Liters water', priority: 'medium', category: 'Health', done: true, date: new Date().toISOString() },
-        { id: '3', title: 'Review monthly budget burn rate', priority: 'low', category: 'Personal', done: false, date: new Date().toISOString() }
+  <!-- APPLICATION LOGIC -->
+  <script>
+    // CORE STATE
+    const DB_KEY = 'LIFEOS_STORE_V2';
+    let appData = {
+      budget: 25000,
+      tasks: [],
+      routine: [
+        { id: '1', period: 'Morning', time: '06:30 AM - 07:30 AM', title: 'Hydration & Morning Fitness', completed: false, image: '', yt: 'https://www.youtube.com/watch?v=UBMk30rjy0o' },
+        { id: '2', period: 'Deep Work', time: '09:00 AM - 12:30 PM', title: 'Deep Work Sprint 1 (Priority Project)', completed: false, image: '', yt: '' },
+        { id: '3', period: 'Afternoon', time: '02:00 PM - 04:30 PM', title: 'Execution, Calls & Admin', completed: false, image: '', yt: '' },
+        { id: '4', period: 'Evening & Winddown', time: '09:00 PM - 10:00 PM', title: 'Daily Review & Next Day Prep', completed: false, image: '', yt: '' }
       ],
-      routines: [
-        { id: 'r1', title: '500ml Water + Morning Stretch', period: 'morning', done: true },
-        { id: 'r2', title: 'Prioritize top 3 tasks of day', period: 'morning', done: true },
-        { id: 'r3', title: '90-min Deep sprint (No phones)', period: 'focus', done: false },
-        { id: 'r4', title: 'Inbox zero & async message replies', period: 'afternoon', done: false },
-        { id: 'r5', title: 'Review expenses & log daily burn', period: 'night', done: false },
-        { id: 'r6', title: 'Set clothes & to-dos for tomorrow', period: 'night', done: false }
-      ],
-      calls: [
-        { id: 'c1', name: 'Alex Johnson', phone: '+1234567890', agenda: 'Contract extension & budget', done: false },
-        { id: 'c2', name: 'Dr. Sarah Smith', phone: '+1987654321', agenda: 'Annual health checkup', done: true }
-      ],
-      expenses: [
-        { id: 'e1', amount: 45.50, category: 'Food', note: 'Weekly groceries', date: new Date().toISOString().split('T')[0] },
-        { id: 'e2', amount: 15.00, category: 'Transport', note: 'Metro card topup', date: new Date().toISOString().split('T')[0] }
-      ]
+      calls: [],
+      expenses: []
     };
 
-    let appState = loadLocalState();
+    let tempRoutineImage = '';
+    let parsedPdfItems = [];
 
-    function loadLocalState() {
-      try {
-        const raw = localStorage.getItem(LOCAL_KEY);
-        if (raw) return { ...DEFAULT_STATE, ...JSON.parse(raw) };
-      } catch (err) {
-        console.warn("Storage read error, using defaults", err);
+    // INIT
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
+        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+      });
+      renderAll();
+    });
+
+    function loadState() {
+      const stored = localStorage.getItem(DB_KEY);
+      if (stored) {
+        try { appData = { ...appData, ...JSON.parse(stored) }; } catch(e) {}
       }
-      return DEFAULT_STATE;
     }
 
-    // Instant optimistic write (0ms latency UI updates)
-    function saveStateAndSync() {
-      try {
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(appState));
-      } catch (e) {
-        console.error("Local save error", e);
+    function saveState() {
+      localStorage.setItem(DB_KEY, JSON.stringify(appData));
+      renderAll();
+    }
+
+    // TABS
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+
+      // Desktop styles
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+      const dActive = document.getElementById(`dtab-${tab}`);
+      if (dActive) {
+        dActive.classList.add('bg-indigo-600', 'text-white');
+        dActive.classList.remove('text-slate-400');
       }
-      triggerCloudSync();
-    }
 
-    // ----------------------------------------------------
-    // CLOUD SYNC ENGINE (Firestore Rule 1, 2, 3 compliant)
-    // ----------------------------------------------------
-    let isSyncing = false;
-    let syncDebounceTimer = null;
-
-    function triggerCloudSync() {
-      if (!db || !currentUser) return;
-      
-      clearTimeout(syncDebounceTimer);
-      syncDebounceTimer = setTimeout(async () => {
-        try {
-          const syncSpinner = document.getElementById('sync-spinner');
-          if (syncSpinner) syncSpinner.classList.remove('hidden');
-          isSyncing = true;
-
-          // Strict Private Path compliant: /artifacts/{appId}/users/{userId}/{collectionName}
-          const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'personal_data', 'root_state');
-          await setDoc(userDocRef, {
-            payload: JSON.stringify(appState),
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-
-          if (syncSpinner) syncSpinner.classList.add('hidden');
-          isSyncing = false;
-        } catch (err) {
-          console.error("Cloud push failed:", err);
-          const syncSpinner = document.getElementById('sync-spinner');
-          if (syncSpinner) syncSpinner.classList.add('hidden');
-          isSyncing = false;
-        }
-      }, 700);
-    }
-
-    function subscribeToCloudSync() {
-      if (!db || !currentUser) return;
-
-      const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'personal_data', 'root_state');
-      onSnapshot(userDocRef, (snapshot) => {
-        if (isSyncing) return; // Prevent overwriting while user is typing
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          if (data && data.payload) {
-            try {
-              const remote = JSON.parse(data.payload);
-              appState = { ...appState, ...remote };
-              localStorage.setItem(LOCAL_KEY, JSON.stringify(appState));
-              renderAll();
-            } catch (e) {
-              console.error("Cloud parse error", e);
-            }
+      // Mobile styles
+      ['tasks', 'routine', 'calls', 'expenses'].forEach(t => {
+        const mActive = document.getElementById(`mtab-${t}`);
+        if (mActive) {
+          if (t === tab) {
+            mActive.className = 'flex flex-col items-center gap-1 text-indigo-400 font-semibold text-[10px]';
+          } else {
+            mActive.className = 'flex flex-col items-center gap-1 text-slate-400 text-[10px]';
           }
-        } else {
-          // Push initial local state up
-          triggerCloudSync();
         }
-      }, (error) => {
-        console.warn("Cloud subscription error:", error);
       });
     }
 
-    // ----------------------------------------------------
-    // FIREBASE INITIALIZATION
-    // ----------------------------------------------------
-    async function initFirebase() {
-      if (!firebaseConfig) {
-        console.log("No Firebase config detected - Operating in high-speed local mode.");
+    // RENDER HELPERS
+    function renderAll() {
+      renderTasks();
+      renderRoutine();
+      renderCalls();
+      renderExpenses();
+      lucide.createIcons();
+    }
+
+    // 1. TASKS
+    function renderTasks() {
+      const list = document.getElementById('tasks-list');
+      const stats = document.getElementById('task-stats');
+      const completed = appData.tasks.filter(t => t.completed).length;
+      stats.textContent = `${completed} of ${appData.tasks.length} completed`;
+
+      if (!appData.tasks.length) {
+        list.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No tasks logged. Tap 'Add Task' above.</div>`;
         return;
       }
 
-      try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        // Authenticate as per Rule 3
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-
-        onAuthStateChanged(auth, (user) => {
-          currentUser = user;
-          updateAuthUI(user);
-          if (user) {
-            subscribeToCloudSync();
-          }
-        });
-      } catch (err) {
-        console.warn("Firebase Auth setup notice:", err.message);
-      }
+      list.innerHTML = appData.tasks.map(t => `
+        <div class="flex items-center justify-between p-3 rounded-xl border ${t.completed ? 'bg-slate-900/30 border-slate-800/40 opacity-60' : 'bg-slate-900/80 border-slate-800'} transition">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}')"
+              class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+            <div>
+              <p class="text-xs font-semibold ${t.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${t.title}</p>
+              <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                <span class="px-1.5 py-0.2 rounded ${t.priority === 'High' ? 'bg-rose-500/10 text-rose-400' : t.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}">${t.priority}</span>
+                ${t.date ? `<span>• Due ${t.date}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <button onclick="deleteTask('${t.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `).join('');
     }
 
-    function updateAuthUI(user) {
-      const badge = document.getElementById('auth-status-badge');
-      const btnLabel = document.getElementById('auth-btn-label');
-      const userRow = document.getElementById('user-details-row');
-      const userIdTxt = document.getElementById('user-id-text');
-      const signoutBtn = document.getElementById('signout-btn');
-
-      if (user) {
-        const isAnon = user.isAnonymous;
-        badge.textContent = isAnon ? "Connected (Private Device)" : `Synced (${user.email || 'Google User'})`;
-        badge.className = "text-emerald-400 font-semibold";
-        btnLabel.textContent = isAnon ? "Synced" : (user.displayName || "Account");
-        userRow.classList.remove('hidden');
-        userIdTxt.textContent = user.uid;
-        signoutBtn.classList.remove('hidden');
-      } else {
-        badge.textContent = "Offline / Local Mode";
-        badge.className = "text-amber-400 font-semibold";
-        btnLabel.textContent = "Cloud Sync";
-        userRow.classList.add('hidden');
-        signoutBtn.classList.add('hidden');
-      }
+    function toggleTask(id) {
+      appData.tasks = appData.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      saveState();
+    }
+    function deleteTask(id) {
+      appData.tasks = appData.tasks.filter(t => t.id !== id);
+      saveState();
+    }
+    function handleSaveTask(e) {
+      e.preventDefault();
+      appData.tasks.push({
+        id: Date.now().toString(),
+        title: document.getElementById('task-title').value,
+        priority: document.getElementById('task-priority').value,
+        date: document.getElementById('task-date').value,
+        completed: false
+      });
+      closeAddTaskModal();
+      saveState();
     }
 
-    // ----------------------------------------------------
-    // RENDERING FUNCTIONS (OPTIMISTIC & ULTRA-FAST)
-    // ----------------------------------------------------
-    function renderTasks() {
-      const container = document.getElementById('tasks-container');
-      if (!container) return;
+    // 2. ROUTINE (With Image and YouTube Player)
+    function renderRoutine() {
+      const container = document.getElementById('routine-blocks-container');
+      const periods = ['Morning', 'Deep Work', 'Afternoon', 'Evening & Winddown'];
 
-      if (appState.tasks.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-8 text-slate-500 bg-surface-900/50 border border-dashed border-slate-800 rounded-xl text-xs">
-            No pending tasks. You are clear!
+      container.innerHTML = periods.map(p => {
+        const items = appData.routine.filter(r => r.period === p);
+        return `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+              <span>${p}</span>
+              <span class="text-[10px]">${items.filter(i => i.completed).length}/${items.length} Done</span>
+            </div>
+            <div class="space-y-2">
+              ${items.length === 0 ? `<div class="p-3 text-xs text-slate-600 bg-slate-900/30 rounded-xl border border-dashed border-slate-800">No scheduled items for this block.</div>` : ''}
+              ${items.map(r => `
+                <div class="p-3 bg-slate-900/80 rounded-xl border ${r.completed ? 'border-indigo-500/30 bg-indigo-950/10' : 'border-slate-800'} space-y-2">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <input type="checkbox" ${r.completed ? 'checked' : ''} onchange="toggleRoutine('${r.id}')"
+                        class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+                      <div>
+                        <span class="text-[10px] font-mono text-indigo-400 font-semibold">${r.time}</span>
+                        <h4 class="text-xs font-semibold ${r.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${r.title}</h4>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      ${r.yt ? `<button onclick="openYtModal('${r.yt}')" class="p-1 text-rose-400 hover:text-rose-300 bg-rose-500/10 rounded-lg"><i data-lucide="youtube" class="w-4 h-4"></i></button>` : ''}
+                      <button onclick="deleteRoutine('${r.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                  </div>
+                  ${r.image ? `
+                    <div class="mt-2 rounded-lg overflow-hidden border border-slate-800 max-h-48 w-full bg-slate-950">
+                      <img src="${r.image}" class="w-full h-auto object-cover max-h-48 cursor-pointer" onclick="window.open('${r.image}', '_blank')" alt="Attachment">
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
           </div>
         `;
-      } else {
-        container.innerHTML = appState.tasks.map(t => {
-          const priorityColor = t.priority === 'high' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                t.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-
-          return `
-            <div class="group flex items-center justify-between p-3 rounded-xl bg-surface-900 border ${t.done ? 'border-slate-800/40 opacity-55' : 'border-slate-800'} hover:border-slate-700 transition">
-              <div class="flex items-center gap-3 flex-1 min-w-0">
-                <button onclick="toggleTask('${t.id}')" class="w-5 h-5 rounded-lg border ${t.done ? 'bg-brand-500 border-brand-500 text-slate-950' : 'border-slate-700 hover:border-brand-500'} flex items-center justify-center transition flex-shrink-0">
-                  ${t.done ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ''}
-                </button>
-                <span class="text-xs ${t.done ? 'line-through text-slate-500' : 'text-slate-200'} truncate font-medium">${escapeHtml(t.title)}</span>
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${priorityColor}">${t.priority}</span>
-                <span class="text-[10px] bg-slate-950 text-slate-400 px-2 py-0.5 rounded-full border border-slate-800 hidden sm:inline">${t.category}</span>
-                <button onclick="deleteTask('${t.id}')" class="text-slate-600 hover:text-red-400 p-1 transition">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Progress Calculation
-      const total = appState.tasks.length;
-      const completed = appState.tasks.filter(t => t.done).length;
-      const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
-      document.getElementById('task-progress-percent').innerText = `${pct}%`;
-      document.getElementById('task-progress-bar').style.width = `${pct}%`;
-      document.getElementById('metric-tasks-count').innerText = (total - completed).toString();
-
-      lucide.createIcons();
-    }
-
-    function renderRoutines() {
-      const periods = ['morning', 'focus', 'afternoon', 'night'];
-      periods.forEach(p => {
-        const el = document.getElementById(`routine-list-${p}`);
-        if (!el) return;
-        const items = appState.routines.filter(r => r.period === p);
-
-        if (items.length === 0) {
-          el.innerHTML = `<div class="text-[11px] text-slate-600 italic py-2">No items set</div>`;
-        } else {
-          el.innerHTML = items.map(r => `
-            <div class="flex items-center justify-between p-2 rounded-xl bg-surface-950 border ${r.done ? 'border-brand-500/20 bg-brand-500/5' : 'border-slate-800/80'} transition">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <button onclick="toggleRoutine('${r.id}')" class="w-4 h-4 rounded border ${r.done ? 'bg-brand-500 border-brand-500 text-slate-950' : 'border-slate-700'} flex items-center justify-center transition flex-shrink-0">
-                  ${r.done ? '<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>' : ''}
-                </button>
-                <span class="text-xs ${r.done ? 'line-through text-slate-500' : 'text-slate-300'} truncate">${escapeHtml(r.title)}</span>
-              </div>
-              <button onclick="deleteRoutine('${r.id}')" class="text-slate-700 hover:text-red-400 p-1 transition flex-shrink-0">
-                <i data-lucide="x" class="w-3 h-3"></i>
-              </button>
-            </div>
-          `).join('');
-        }
-      });
-      lucide.createIcons();
-    }
-
-    function renderCalls() {
-      const container = document.getElementById('calls-container');
-      if (!container) return;
-
-      const pending = appState.calls.filter(c => !c.done).length;
-      document.getElementById('pending-calls-count').innerText = `${pending} Pending`;
-
-      if (appState.calls.length === 0) {
-        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No calls or follow-ups logged.</div>`;
-      } else {
-        container.innerHTML = appState.calls.map(c => `
-          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-950 border border-slate-800/80 hover:border-slate-700 transition">
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-white truncate">${escapeHtml(c.name)}</span>
-                ${c.done ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">Done</span>' : '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono">Pending</span>'}
-              </div>
-              <p class="text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(c.agenda || 'No agenda note')}</p>
-            </div>
-
-            <div class="flex items-center gap-1.5 flex-shrink-0 ml-3">
-              ${c.phone ? `
-                <a href="tel:${c.phone}" class="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition" title="Direct Phone Call">
-                  <i data-lucide="phone" class="w-4 h-4"></i>
-                </a>
-              ` : ''}
-              <button onclick="toggleCall('${c.id}')" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-brand-400 transition" title="Toggle Done">
-                <i data-lucide="${c.done ? 'rotate-ccw' : 'check'}" class="w-4 h-4"></i>
-              </button>
-              <button onclick="deleteCall('${c.id}')" class="p-2 text-slate-600 hover:text-red-400 transition">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        `).join('');
-      }
-      lucide.createIcons();
-    }
-
-    function renderExpenses() {
-      const container = document.getElementById('expense-list-container');
-      const filterSelect = document.getElementById('expense-month-filter');
-      const catPills = document.getElementById('category-pills-container');
-
-      // Render Category Selection Buttons
-      if (catPills) {
-        catPills.innerHTML = appState.categories.map(cat => `
-          <button 
-            type="button" 
-            onclick="selectCategory('${cat}')" 
-            class="px-2.5 py-1 text-xs rounded-lg transition font-medium whitespace-nowrap ${appState.selectedCategory === cat ? 'bg-brand-500 text-slate-950 font-bold shadow' : 'bg-surface-950 text-slate-400 border border-slate-800 hover:text-white'}">
-            ${escapeHtml(cat)}
-          </button>
-        `).join('');
-      }
-
-      // Calculate Months Present
-      const monthsSet = new Set();
-      const currentMonthIso = new Date().toISOString().substring(0, 7);
-      monthsSet.add(currentMonthIso);
-      appState.expenses.forEach(e => {
-        if (e.date) monthsSet.add(e.date.substring(0, 7));
-      });
-
-      const sortedMonths = Array.from(monthsSet).sort().reverse();
-      const currentSelectedMonth = filterSelect.value || currentMonthIso;
-
-      filterSelect.innerHTML = sortedMonths.map(m => {
-        const dateObj = new Date(m + "-01");
-        const label = dateObj.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
-        return `<option value="${m}" ${m === currentSelectedMonth ? 'selected' : ''}>${label}</option>`;
       }).join('');
+    }
 
-      // Filtered expenses
-      const activeMonth = filterSelect.value;
-      const monthExpenses = appState.expenses.filter(e => e.date && e.date.startsWith(activeMonth));
-
-      // Calculate Totals & Top Category
-      let totalSpent = 0;
-      const categoryTotals = {};
-
-      monthExpenses.forEach(e => {
-        const val = parseFloat(e.amount) || 0;
-        totalSpent += val;
-        categoryTotals[e.category] = (categoryTotals[e.category] || 0) + val;
+    function toggleRoutine(id) {
+      appData.routine = appData.routine.map(r => r.id === id ? { ...r, completed: !r.completed } : r);
+      saveState();
+    }
+    function deleteRoutine(id) {
+      appData.routine = appData.routine.filter(r => r.id !== id);
+      saveState();
+    }
+    function handleRoutineImageSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('ritem-image-name').textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        tempRoutineImage = ev.target.result;
+        document.getElementById('ritem-img-preview-tag').src = tempRoutineImage;
+        document.getElementById('ritem-img-preview').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+    function handleSaveRoutineItem(e) {
+      e.preventDefault();
+      appData.routine.push({
+        id: Date.now().toString(),
+        time: document.getElementById('ritem-time').value,
+        title: document.getElementById('ritem-title').value,
+        period: document.getElementById('ritem-period').value,
+        yt: document.getElementById('ritem-yt').value.trim(),
+        image: tempRoutineImage,
+        completed: false
       });
+      closeAddRoutineModal();
+      saveState();
+    }
 
-      let topCat = '-';
-      let topVal = 0;
-      for (const [k, v] of Object.entries(categoryTotals)) {
-        if (v > topVal) {
-          topVal = v;
-          topCat = k;
-        }
-      }
-
-      // Update UI cards
-      document.getElementById('expense-month-total').innerText = `$${totalSpent.toFixed(2)}`;
-      document.getElementById('metric-spend-amt').innerText = `$${totalSpent.toFixed(2)}`;
-      document.getElementById('budget-target-val').innerText = `$${appState.budget.toFixed(2)}`;
-      document.getElementById('expense-top-cat').innerText = topCat !== '-' ? `${topCat} ($${topVal.toFixed(2)})` : '-';
-      document.getElementById('expense-count-summary').innerText = `${monthExpenses.length} transactions in ${activeMonth}`;
-
-      // Burn rate calculation (current day of month)
-      const daysInMonthSoFar = Math.max(1, new Date().getDate());
-      const dailyBurn = totalSpent / daysInMonthSoFar;
-      document.getElementById('expense-burn-rate').innerText = `Burn: $${dailyBurn.toFixed(2)} / day`;
-
-      // Budget progress bar
-      const budgetPct = Math.min(100, Math.round((totalSpent / appState.budget) * 100));
-      const budgetBar = document.getElementById('budget-progress-bar');
-      budgetBar.style.width = `${budgetPct}%`;
-      if (budgetPct > 90) {
-        budgetBar.className = "bg-red-500 h-full transition-all";
-      } else if (budgetPct > 75) {
-        budgetBar.className = "bg-amber-500 h-full transition-all";
+    // YOUTUBE EMBED MODAL
+    function openYtModal(url) {
+      let videoId = '';
+      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+      else if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
+      if (videoId) {
+        document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        document.getElementById('modal-yt-player').classList.remove('hidden');
+        lucide.createIcons();
       } else {
-        budgetBar.className = "bg-brand-500 h-full transition-all";
+        window.open(url, '_blank');
       }
+    }
+    function closeYtModal() {
+      document.getElementById('yt-iframe').src = '';
+      document.getElementById('modal-yt-player').classList.add('hidden');
+    }
 
-      // Ledger list
-      if (monthExpenses.length === 0) {
-        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No expenses recorded for this month.</div>`;
-      } else {
-        container.innerHTML = monthExpenses.map(e => `
-          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-950 border border-slate-800/80 hover:border-slate-700 transition">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-slate-200 truncate">${escapeHtml(e.note)}</span>
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-slate-400">${escapeHtml(e.category)}</span>
-              </div>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">${e.date}</div>
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-mono font-bold text-white">$${parseFloat(e.amount).toFixed(2)}</span>
-              <button onclick="deleteExpense('${e.id}')" class="text-slate-600 hover:text-red-400 transition">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
+    // 3. CALLS
+    function renderCalls() {
+      const list = document.getElementById('calls-list');
+      if (!appData.calls.length) {
+        list.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No scheduled calls. Tap 'Add Call' to log someone to contact.</div>`;
+        return;
+      }
+      list.innerHTML = appData.calls.map(c => `
+        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/80">
+          <div>
+            <h4 class="text-xs font-semibold text-white">${c.name}</h4>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">${c.phone}</p>
+            ${c.purpose ? `<span class="text-[10px] text-indigo-400">${c.purpose}</span>` : ''}
           </div>
-        `).join('');
-      }
-
-      lucide.createIcons();
+          <div class="flex items-center gap-2">
+            <a href="tel:${c.phone}" class="p-2 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
+              <i data-lucide="phone" class="w-4 h-4"></i>
+            </a>
+            <button onclick="deleteCall('${c.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+    function handleSaveCall(e) {
+      e.preventDefault();
+      appData.calls.push({
+        id: Date.now().toString(),
+        name: document.getElementById('call-name').value,
+        phone: document.getElementById('call-phone').value,
+        purpose: document.getElementById('call-purpose').value
+      });
+      closeAddCallModal();
+      saveState();
+    }
+    function deleteCall(id) {
+      appData.calls = appData.calls.filter(c => c.id !== id);
+      saveState();
     }
 
-    function renderAll() {
-      renderTasks();
-      renderRoutines();
-      renderCalls();
-      renderExpenses();
+    // 4. EXPENSES (Rupees ₹)
+    function renderExpenses() {
+      const total = appData.expenses.reduce((acc, x) => acc + Number(x.amount), 0);
+      const budget = appData.budget || 25000;
+      const budgetLeft = budget - total;
       
-      const pad = document.getElementById('scratchpad-input');
-      if (pad && pad.value !== appState.scratchpad) {
-        pad.value = appState.scratchpad || '';
+      const now = new Date();
+      const dayOfMonth = now.getDate();
+      const avg = (total / Math.max(1, dayOfMonth)).toFixed(0);
+
+      document.getElementById('expense-total').textContent = `₹${total.toLocaleString('en-IN')}`;
+      document.getElementById('expense-daily-avg').textContent = `₹${Number(avg).toLocaleString('en-IN')}`;
+      document.getElementById('expense-budget-disp').textContent = `₹${budget.toLocaleString('en-IN')}`;
+      document.getElementById('expense-budget-left').textContent = `₹${budgetLeft.toLocaleString('en-IN')}`;
+      document.getElementById('expense-count').textContent = `${appData.expenses.length} transactions`;
+
+      const list = document.getElementById('expense-list');
+      if (!appData.expenses.length) {
+        list.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No expenses recorded for this month yet.</div>`;
+        return;
       }
+      list.innerHTML = appData.expenses.slice().reverse().map(x => `
+        <div class="flex items-center justify-between p-3 text-xs">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-slate-200">${x.note || x.category}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${x.category}</span>
+            </div>
+            <span class="text-[10px] text-slate-500">${x.date}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-rose-400 font-mono">₹${Number(x.amount).toLocaleString('en-IN')}</span>
+            <button onclick="deleteExpense('${x.id}')" class="text-slate-600 hover:text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+    function handleQuickExpense(e) {
+      e.preventDefault();
+      const amt = document.getElementById('quick-exp-amount').value;
+      const cat = document.getElementById('quick-exp-cat').value;
+      const note = document.getElementById('quick-exp-note').value;
+      appData.expenses.push({
+        id: Date.now().toString(),
+        amount: parseFloat(amt),
+        category: cat,
+        note: note,
+        date: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+      });
+      document.getElementById('quick-exp-amount').value = '';
+      document.getElementById('quick-exp-note').value = '';
+      saveState();
+    }
+    function deleteExpense(id) {
+      appData.expenses = appData.expenses.filter(x => x.id !== id);
+      saveState();
     }
 
-    // ----------------------------------------------------
-    // ACTIONS & CONTROLLERS (Exposed to window)
-    // ----------------------------------------------------
-    window.switchTab = (tabName) => {
-      // Toggle panels
-      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
-      const active = document.getElementById(`view-${tabName}`);
-      if (active) active.classList.remove('hidden');
-
-      // Update mobile nav buttons
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        const isTarget = btn.getAttribute('data-tab') === tabName;
-        btn.className = `nav-btn flex flex-col items-center py-1.5 rounded-xl transition ${isTarget ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'}`;
-      });
-
-      // Update desktop buttons
-      document.querySelectorAll('.desk-nav-btn').forEach(btn => {
-        const isTarget = btn.getAttribute('data-desk-tab') === tabName;
-        if (isTarget) {
-          btn.className = "desk-nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-brand-500 text-slate-950 flex items-center gap-2 shadow-sm transition";
-        } else {
-          btn.className = "desk-nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 flex items-center gap-2 transition";
-        }
-      });
-      lucide.createIcons();
-    };
-
-    window.toggleTask = (id) => {
-      appState.tasks = appState.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
-      renderTasks();
-      saveStateAndSync();
-    };
-
-    window.deleteTask = (id) => {
-      appState.tasks = appState.tasks.filter(t => t.id !== id);
-      renderTasks();
-      saveStateAndSync();
-    };
-
-    window.clearCompletedTasks = () => {
-      appState.tasks = appState.tasks.filter(t => !t.done);
-      renderTasks();
-      saveStateAndSync();
-    };
-
-    window.toggleRoutine = (id) => {
-      appState.routines = appState.routines.map(r => r.id === id ? { ...r, done: !r.done } : r);
-      renderRoutines();
-      saveStateAndSync();
-    };
-
-    window.deleteRoutine = (id) => {
-      appState.routines = appState.routines.filter(r => r.id !== id);
-      renderRoutines();
-      saveStateAndSync();
-    };
-
-    window.resetRoutineChecks = () => {
-      appState.routines = appState.routines.map(r => ({ ...r, done: false }));
-      renderRoutines();
-      saveStateAndSync();
-    };
-
-    window.toggleCall = (id) => {
-      appState.calls = appState.calls.map(c => c.id === id ? { ...c, done: !c.done } : c);
-      renderCalls();
-      saveStateAndSync();
-    };
-
-    window.deleteCall = (id) => {
-      appState.calls = appState.calls.filter(c => c.id !== id);
-      renderCalls();
-      saveStateAndSync();
-    };
-
-    window.selectCategory = (cat) => {
-      appState.selectedCategory = cat;
-      renderExpenses();
-    };
-
-    window.deleteExpense = (id) => {
-      appState.expenses = appState.expenses.filter(e => e.id !== id);
-      renderExpenses();
-      saveStateAndSync();
-    };
-
-    window.addCustomCategoryPrompt = () => {
-      const name = prompt("Enter new Category Name:");
-      if (name && name.trim()) {
-        const clean = name.trim();
-        if (!appState.categories.includes(clean)) {
-          appState.categories.push(clean);
-          appState.selectedCategory = clean;
-          renderExpenses();
-          saveStateAndSync();
-        }
-      }
-    };
-
-    window.editBudgetPrompt = () => {
-      const val = prompt("Enter monthly budget limit ($):", appState.budget);
-      if (val && !isNaN(val)) {
-        appState.budget = Math.max(0, parseFloat(val));
-        renderExpenses();
-        saveStateAndSync();
-      }
-    };
-
-    // Modal controls
-    window.openAddRoutineModal = () => document.getElementById('routine-modal').classList.remove('hidden');
-    window.closeRoutineModal = () => document.getElementById('routine-modal').classList.add('hidden');
-    window.openAuthModal = () => document.getElementById('auth-modal').classList.remove('hidden');
-    window.closeAuthModal = () => document.getElementById('auth-modal').classList.add('hidden');
-
-    // ----------------------------------------------------
-    // PDF EXTRACTION & IMPORT ENGINE (100% Client-Side)
-    // ----------------------------------------------------
-    let extractedRoutineItems = [];
-
-    window.openPdfModal = () => {
-      document.getElementById('pdf-modal').classList.remove('hidden');
-      document.getElementById('pdf-loading').classList.add('hidden');
-      document.getElementById('pdf-preview-section').classList.add('hidden');
-      extractedRoutineItems = [];
-      lucide.createIcons();
-    };
-
-    window.closePdfModal = () => {
-      document.getElementById('pdf-modal').classList.add('hidden');
-      const input = document.getElementById('pdf-file-input');
-      if (input) input.value = '';
-    };
-
-    window.handlePdfFileUpload = async (event) => {
-      const file = event.target.files && event.target.files[0];
+    // 5. PDF PARSER (Runs entirely in browser via PDF.js)
+    async function handlePdfUpload(event) {
+      const file = event.target.files[0];
       if (!file) return;
 
-      const loadingEl = document.getElementById('pdf-loading');
-      const previewEl = document.getElementById('pdf-preview-section');
+      const status = document.getElementById('pdf-parser-status');
+      const preview = document.getElementById('pdf-preview-box');
+      const itemsList = document.getElementById('pdf-parsed-items');
+      const saveBtn = document.getElementById('pdf-save-btn');
 
-      loadingEl.classList.remove('hidden');
-      previewEl.classList.add('hidden');
+      status.classList.remove('hidden');
+      preview.classList.add('hidden');
+      saveBtn.disabled = true;
 
       try {
         const arrayBuffer = await file.arrayBuffer();
-        if (!window.pdfjsLib) {
-          throw new Error("PDF parser library not loaded");
-        }
-
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullLines = [];
+        let fullText = '';
 
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          
-          let lineMap = {};
-          textContent.items.forEach(item => {
-            const y = Math.round(item.transform[5]);
-            if (!lineMap[y]) lineMap[y] = [];
-            lineMap[y].push(item.str);
-          });
-
-          // Sort lines vertically from top to bottom
-          const sortedY = Object.keys(lineMap).map(Number).sort((a, b) => b - a);
-          sortedY.forEach(y => {
-            const line = lineMap[y].join(' ').trim();
-            if (line.length > 2) {
-              fullLines.push(line);
-            }
-          });
+          const content = await page.getTextContent();
+          const strings = content.items.map(item => item.str);
+          fullText += strings.join(' ') + '\n';
         }
 
-        parseLinesToRoutine(fullLines);
-      } catch (err) {
-        console.error("PDF parse error:", err);
-        alert("Could not parse this PDF. Please verify it is a valid text PDF.");
-      } finally {
-        loadingEl.classList.add('hidden');
-      }
-    };
+        parsedPdfItems = parseTextIntoRoutine(fullText);
 
-    function parseLinesToRoutine(lines) {
-      extractedRoutineItems = [];
-      const timeRegex = /(\b\d{1,2}[:.]\d{2}\s*(?:AM|PM|am|pm)?\b|\b\d{1,2}\s*(?:AM|PM|am|pm)\b)/i;
-      
-      let currentPeriod = 'morning';
+        status.classList.add('hidden');
+        preview.classList.remove('hidden');
 
-      lines.forEach((line, idx) => {
-        const lower = line.toLowerCase();
-
-        // Detect Period shifts from headers
-        if (lower.includes('morning') || lower.includes('breakfast') || lower.includes('wake')) {
-          currentPeriod = 'morning';
-        } else if (lower.includes('work') || lower.includes('focus') || lower.includes('sprint') || lower.includes('study')) {
-          currentPeriod = 'focus';
-        } else if (lower.includes('afternoon') || lower.includes('lunch') || lower.includes('post-lunch')) {
-          currentPeriod = 'afternoon';
-        } else if (lower.includes('evening') || lower.includes('night') || lower.includes('sleep') || lower.includes('dinner')) {
-          currentPeriod = 'night';
-        }
-
-        const timeMatch = line.match(timeRegex);
-        if (timeMatch) {
-          // Determine period if 24hr or AM/PM is present
-          const timeStr = timeMatch[0].toLowerCase();
-          if (timeStr.includes('pm')) {
-            const hour = parseInt(timeStr);
-            if (hour === 12 || hour < 5) currentPeriod = 'afternoon';
-            else currentPeriod = 'night';
-          } else if (timeStr.includes('am')) {
-            const hour = parseInt(timeStr);
-            if (hour >= 10 && hour < 12) currentPeriod = 'focus';
-            else currentPeriod = 'morning';
-          }
-        }
-
-        // Clean noise lines
-        const cleanTitle = line.replace(/^[•\-\*–—\d+.\)\s]+/, '').trim();
-        if (cleanTitle.length >= 3 && !lower.startsWith('page ') && !lower.startsWith('schedule:')) {
-          extractedRoutineItems.push({
-            id: 'ext_' + idx + '_' + Date.now(),
-            title: cleanTitle,
-            period: currentPeriod,
-            selected: true
-          });
-        }
-      });
-
-      renderExtractedItems();
-    }
-
-    function renderExtractedItems() {
-      const container = document.getElementById('extracted-items-container');
-      const countEl = document.getElementById('detected-count');
-      const previewEl = document.getElementById('pdf-preview-section');
-
-      if (!extractedRoutineItems || extractedRoutineItems.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">No clear routine lines detected in this PDF.</div>`;
-        countEl.innerText = '0';
-        previewEl.classList.remove('hidden');
-        return;
-      }
-
-      countEl.innerText = extractedRoutineItems.length.toString();
-      container.innerHTML = extractedRoutineItems.map((item, index) => `
-        <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-950 border border-slate-800 text-xs">
-          <div class="flex items-center gap-2.5 min-w-0 flex-1">
-            <input 
-              type="checkbox" 
-              ${item.selected ? 'checked' : ''} 
-              onchange="toggleExtractedItem(${index}, this.checked)"
-              class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-500 accent-brand-500 cursor-pointer"
-            />
-            <span class="text-slate-200 truncate font-medium">${escapeHtml(item.title)}</span>
-          </div>
-          <select 
-            onchange="updateExtractedPeriod(${index}, this.value)" 
-            class="bg-slate-900 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none ml-2">
-            <option value="morning" ${item.period === 'morning' ? 'selected' : ''}>Morning</option>
-            <option value="focus" ${item.period === 'focus' ? 'selected' : ''}>Focus</option>
-            <option value="afternoon" ${item.period === 'afternoon' ? 'selected' : ''}>Afternoon</option>
-            <option value="night" ${item.period === 'night' ? 'selected' : ''}>Night</option>
-          </select>
-        </div>
-      `).join('');
-
-      previewEl.classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    window.toggleExtractedItem = (index, checked) => {
-      if (extractedRoutineItems[index]) {
-        extractedRoutineItems[index].selected = checked;
-      }
-    };
-
-    window.updateExtractedPeriod = (index, period) => {
-      if (extractedRoutineItems[index]) {
-        extractedRoutineItems[index].period = period;
-      }
-    };
-
-    window.toggleAllExtracted = (val) => {
-      extractedRoutineItems.forEach(i => i.selected = val);
-      renderExtractedItems();
-    };
-
-    window.confirmPdfImport = () => {
-      const selectedItems = extractedRoutineItems.filter(i => i.selected);
-      if (selectedItems.length === 0) {
-        alert("Please select at least one routine item to import.");
-        return;
-      }
-
-      const isReplace = document.getElementById('import-mode-replace').checked;
-      const newItems = selectedItems.map(item => ({
-        id: 'r_' + Math.random().toString(36).substr(2, 9),
-        title: item.title,
-        period: item.period,
-        done: false
-      }));
-
-      if (isReplace) {
-        appState.routines = newItems;
-      } else {
-        appState.routines = [...appState.routines, ...newItems];
-      }
-
-      saveStateAndSync();
-      renderRoutines();
-      closePdfModal();
-      switchTab('routine');
-    };
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text.replace(/[&<>"']/g, function(m) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m];
-      });
-    }
-
-    // ----------------------------------------------------
-    // EVENT LISTENERS & SETUP
-    // ----------------------------------------------------
-    window.addEventListener('DOMContentLoaded', () => {
-      // Set current date
-      const d = new Date();
-      document.getElementById('current-date-display').innerText = d.toLocaleDateString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      });
-
-      // Default expense date to today
-      document.getElementById('exp-date').value = d.toISOString().split('T')[0];
-
-      // Form 1: Task Add
-      document.getElementById('task-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = document.getElementById('task-input');
-        const prio = document.getElementById('task-priority').value;
-        const cat = document.getElementById('task-category').value;
-        if (!input.value.trim()) return;
-
-        appState.tasks.unshift({
-          id: 't_' + Date.now(),
-          title: input.value.trim(),
-          priority: prio,
-          category: cat,
-          done: false,
-          date: new Date().toISOString()
-        });
-        input.value = '';
-        renderTasks();
-        saveStateAndSync();
-      });
-
-      // Form 2: Routine Add
-      document.getElementById('add-routine-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const title = document.getElementById('routine-title').value.trim();
-        const period = document.getElementById('routine-period').value;
-        if (!title) return;
-
-        appState.routines.push({
-          id: 'r_' + Date.now(),
-          title,
-          period,
-          done: false
-        });
-        document.getElementById('routine-title').value = '';
-        closeRoutineModal();
-        renderRoutines();
-        saveStateAndSync();
-      });
-
-      // Form 3: Calls Add
-      document.getElementById('call-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('call-name').value.trim();
-        const phone = document.getElementById('call-phone').value.trim();
-        const agenda = document.getElementById('call-agenda').value.trim();
-        if (!name) return;
-
-        appState.calls.unshift({
-          id: 'c_' + Date.now(),
-          name,
-          phone,
-          agenda,
-          done: false
-        });
-        document.getElementById('call-name').value = '';
-        document.getElementById('call-phone').value = '';
-        document.getElementById('call-agenda').value = '';
-        renderCalls();
-        saveStateAndSync();
-      });
-
-      // Form 4: Expense Add
-      document.getElementById('expense-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const amt = parseFloat(document.getElementById('exp-amount').value);
-        const note = document.getElementById('exp-note').value.trim();
-        const date = document.getElementById('exp-date').value;
-        if (!amt || !note) return;
-
-        appState.expenses.unshift({
-          id: 'e_' + Date.now(),
-          amount: amt,
-          category: appState.selectedCategory || 'Food',
-          note,
-          date: date || new Date().toISOString().split('T')[0]
-        });
-        document.getElementById('exp-amount').value = '';
-        document.getElementById('exp-note').value = '';
-        renderExpenses();
-        saveStateAndSync();
-      });
-
-      // Expense Month Filter Change
-      document.getElementById('expense-month-filter').addEventListener('change', () => {
-        renderExpenses();
-      });
-
-      // Scratchpad auto-save debounce
-      const pad = document.getElementById('scratchpad-input');
-      const padSaved = document.getElementById('scratchpad-saved');
-      let padTimer = null;
-      pad.addEventListener('input', () => {
-        clearTimeout(padTimer);
-        padTimer = setTimeout(() => {
-          appState.scratchpad = pad.value;
-          saveStateAndSync();
-          padSaved.classList.remove('opacity-0');
-          setTimeout(() => padSaved.classList.add('opacity-0'), 1500);
-        }, 500);
-      });
-
-      // Online/Offline Listeners
-      const updateNetworkStatus = () => {
-        const pill = document.getElementById('connection-pill');
-        const text = document.getElementById('connection-text');
-        if (navigator.onLine) {
-          pill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/60";
-          pill.firstElementChild.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-          text.textContent = "Online";
+        if (parsedPdfItems.length === 0) {
+          itemsList.innerHTML = `<p class="text-amber-400">Could not extract routine times automatically. Text sample extracted: "${fullText.slice(0, 150)}..."</p>`;
         } else {
-          pill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-950/80 text-amber-400 border border-amber-800/60";
-          pill.firstElementChild.className = "w-2 h-2 rounded-full bg-amber-400";
-          text.textContent = "Offline (Local)";
+          itemsList.innerHTML = parsedPdfItems.map((item, idx) => `
+            <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between items-center">
+              <div>
+                <span class="text-indigo-400 font-mono text-[10px]">${item.time}</span>
+                <p class="font-semibold text-slate-200">${item.title}</p>
+                <span class="text-[9px] text-slate-500 uppercase">${item.period}</span>
+              </div>
+            </div>
+          `).join('');
+          saveBtn.disabled = false;
         }
-      };
-      window.addEventListener('online', updateNetworkStatus);
-      window.addEventListener('offline', updateNetworkStatus);
-      updateNetworkStatus();
+      } catch (err) {
+        status.innerHTML = `<span class="text-rose-400">Error reading PDF: ${err.message}</span>`;
+      }
+    }
 
-      // Auth modal triggers
-      document.getElementById('auth-modal-trigger').addEventListener('click', openAuthModal);
+    function parseTextIntoRoutine(text) {
+      const lines = text.split(/\r?\n|\s{3,}/).map(l => l.trim()).filter(Boolean);
+      const extracted = [];
+      const timeRegex = /(\b\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\s*(?:-|to)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|AM|PM)?\b)/;
 
-      // Google Sign-In
-      document.getElementById('google-signin-btn').addEventListener('click', async () => {
-        if (!auth) return;
-        try {
-          const provider = new GoogleAuthProvider();
-          await signInWithPopup(auth, provider);
-          closeAuthModal();
-        } catch (err) {
-          console.warn("Sign-in note:", err.message);
+      for (let line of lines) {
+        const match = line.match(timeRegex);
+        if (match) {
+          const time = match[0].trim();
+          let title = line.replace(time, '').replace(/^[:\-\s]+/, '').trim();
+          if (!title) title = 'Scheduled Activity';
+
+          let period = 'Deep Work';
+          const lower = (time + ' ' + title).toLowerCase();
+          if (lower.includes('morning') || lower.includes('am') || lower.includes('breakfast') || lower.includes('wake')) period = 'Morning';
+          else if (lower.includes('afternoon') || lower.includes('lunch')) period = 'Afternoon';
+          else if (lower.includes('night') || lower.includes('dinner') || lower.includes('sleep') || lower.includes('wind')) period = 'Evening & Winddown';
+
+          extracted.push({
+            id: Date.now() + Math.random().toString(),
+            time,
+            title,
+            period,
+            yt: '',
+            image: '',
+            completed: false
+          });
         }
-      });
+      }
+      return extracted;
+    }
 
-      // Anonymous / Private Token
-      document.getElementById('anon-signin-btn').addEventListener('click', async () => {
-        if (!auth) return;
-        try {
-          await signInAnonymously(auth);
-          closeAuthModal();
-        } catch (err) {
-          console.warn("Anon sign-in note:", err.message);
-        }
-      });
+    function saveParsedRoutine() {
+      const shouldReplace = document.getElementById('pdf-replace-checkbox').checked;
+      if (shouldReplace) {
+        appData.routine = parsedPdfItems;
+      } else {
+        appData.routine = [...appData.routine, ...parsedPdfItems];
+      }
+      closePdfModal();
+      saveState();
+      switchTab('routine');
+    }
 
-      // Sign Out
-      document.getElementById('signout-btn').addEventListener('click', async () => {
-        if (!auth) return;
-        try {
-          await signOut(auth);
-          currentUser = null;
-          updateAuthUI(null);
-          closeAuthModal();
-        } catch (e) {
-          console.error(e);
-        }
-      });
-
-      // Data Backup Download
-      document.getElementById('export-json-btn').addEventListener('click', () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `OmniSync_Backup_${new Date().toISOString().split('T')[0]}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      });
-
-      // Render Everything Right Away (Zero Lag)
-      renderAll();
-      initFirebase();
+    // MODAL TOGGLES
+    function openPdfModal() { document.getElementById('modal-pdf').classList.remove('hidden'); lucide.createIcons(); }
+    function closePdfModal() { document.getElementById('modal-pdf').classList.add('hidden'); }
+    function openAddRoutineModal() {
+      tempRoutineImage = '';
+      document.getElementById('ritem-img-preview').classList.add('hidden');
+      document.getElementById('ritem-image-name').textContent = 'No file chosen';
+      document.getElementById('modal-add-routine').classList.remove('hidden');
       lucide.createIcons();
-    });
+    }
+    function closeAddRoutineModal() { document.getElementById('modal-add-routine').classList.add('hidden'); }
+    function openAddTaskModal() { document.getElementById('modal-add-task').classList.remove('hidden'); lucide.createIcons(); }
+    function closeAddTaskModal() { document.getElementById('modal-add-task').classList.add('hidden'); }
+    function openAddCallModal() { document.getElementById('modal-add-call').classList.remove('hidden'); lucide.createIcons(); }
+    function closeAddCallModal() { document.getElementById('modal-add-call').classList.add('hidden'); }
+    function openSettingsModal() {
+      document.getElementById('settings-budget-input').value = appData.budget || 25000;
+      document.getElementById('modal-settings').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeSettingsModal() { document.getElementById('modal-settings').classList.add('hidden'); }
+
+    function saveBudgetSetting() {
+      const b = parseFloat(document.getElementById('settings-budget-input').value);
+      if (b) { appData.budget = b; saveState(); closeSettingsModal(); }
+    }
+
+    // JSON EXPORT/IMPORT
+    function exportDataJson() {
+      const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lifeos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+    function importDataJson(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          appData = JSON.parse(ev.target.result);
+          saveState();
+          closeSettingsModal();
+        } catch(err) { alert('Invalid backup file'); }
+      };
+      reader.readAsText(file);
+    }
   </script>
 </body>
 </html>
